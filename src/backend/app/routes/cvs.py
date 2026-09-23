@@ -3,6 +3,7 @@ from uuid import uuid4
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.core.config import settings
+from app.services.cv_parser import extract_text
 
 
 router = APIRouter(prefix="/cvs", tags=["CVs"])
@@ -45,8 +46,20 @@ async def upload_cv(file: UploadFile = File(...)):
             detail=f"File size exceeds maximum limit({settings.max_upload_size_mb}MB)!",
         )
 
+    text = extract_text(file_path)
+
+    # Check if text is extracted
+    if not text:
+        file_path.unlink(missing_ok=True)
+
+        raise HTTPException(
+            status_code=400,
+            detail="Could not extract text from the CV",
+        )
+
     return {
         "id": cv_id,
         "filename": file.filename,
         "status": "uploaded",
+        "text": text,
     }
