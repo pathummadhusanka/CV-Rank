@@ -6,11 +6,17 @@ tags: []
 
 # Backend Documentation
 
-Backend-specific worklog and technical decisions live here.
+This folder records backend progress and the decisions that shape the system.
 
 ## Files
 
-- `WORKLOG.md` - chronological implementation notes, checks, and outcomes.
-- `DECISIONS.md` - decisions that affect backend design or development workflow.
+- `WORKLOG.md` - major milestones, outcomes, and the next meaningful checkpoint.
+- `DECISIONS.md` - major architectural and workflow decisions with lasting impact.
 
-Keep entries concise and link decisions from the worklog when a decision changes the implementation.
+## What Belongs Here
+
+- Add a worklog entry when a meaningful backend capability is completed, a milestone is reached, or work is blocked.
+- Add a decision entry when a choice affects architecture, data contracts, development workflow, or future migration cost.
+- Keep routine debugging notes, small implementation details, and every individual commit in the commit history instead.
+
+Milestones and decisions should include their outcome and a follow-up when one exists.
