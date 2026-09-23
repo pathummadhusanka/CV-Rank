@@ -71,11 +71,18 @@ The worklog tracks meaningful backend milestones rather than individual commits 
 - **Evidence:** Updated [SPEC.md](../../../SPEC.md) and [DECISIONS.md](DECISIONS.md#hosted-llm-for-semantic-assessment).
 - **Next checkpoint:** Implement the provider interface, validated AI schemas, mock provider, and runtime configuration on `feat/ai`.
 
+## 2026-09-24 - AI Contract and Mock Provider Milestone
+
+- **Scope:** AI requirement and candidate-assessment schemas, provider protocol, mock provider, runtime settings, and prompt record.
+- **Outcome:** AI outputs have validated classifications, evidence fields, and bounded requirement weights. Local tests use the mock provider and do not require an API key.
+- **Evidence:** `uv run pytest tests/test_ai.py -q` passes with `4` tests.
+- **Next checkpoint:** Implement the hosted provider adapter and integrate validated AI assessments into job analysis and ranking.
+
 ## Current Checkpoint
 
 - **Branch:** `feat/ai`
-- **Status:** Core API, persistence, parsing, matching, scoring, typed read endpoints, ranking, automated behavior coverage, and Docker configuration are implemented. AI semantic assessment is not implemented yet.
-- **Next milestone:** Add the provider interface, validated AI schemas, mock provider, and runtime configuration.
+- **Status:** Core API, persistence, parsing, matching, scoring, typed read endpoints, ranking, automated behavior coverage, Docker configuration, and AI contracts are implemented. Hosted AI assessment is not integrated yet.
+- **Next milestone:** Add the hosted provider adapter and integrate validated AI assessments.
 
 ## Milestone Entry Template
 
