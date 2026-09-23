@@ -32,6 +32,14 @@ Only record decisions that materially affect backend architecture, data behavior
 - **Reason:** Deterministic scoring makes results reproducible, testable, and explainable. AI or parsers may provide structured evidence, but application code owns the calculation.
 - **Impact:** Changes to score weights or match values require code and focused tests. See the scoring requirements in `SPEC.md`.
 
+## Isolated Database for Automated Tests
+
+- **Date:** 2026-09-23
+- **Status:** Accepted
+- **Decision:** API tests use a temporary SQLite database and override the application session dependency instead of writing to `storage/cv_rank.db`.
+- **Reason:** Tests must be repeatable and must not change development data. The dependency override also exercises the real FastAPI route and persistence path.
+- **Impact:** New API tests should use the shared temporary-database fixture pattern. The development database remains available for manual API and viewer checks.
+
 ## Decision Entry Template
 
 ### Decision title

@@ -22,11 +22,18 @@ The worklog tracks meaningful backend milestones rather than individual commits 
 - **Outcome:** The active database is `src/backend/storage/cv_rank.db`; it is valid SQLite, has `cvs` and `jobs` tables, and persists successful `POST /jobs` requests.
 - **Follow-up:** Keep the API running from `src/backend` while the database URL remains relative. See [DECISIONS.md](DECISIONS.md#sqlite-for-current-development-persistence).
 
+## 2026-09-23 - First Automated API Test Milestone
+
+- **Scope:** Isolated tests for the health endpoint, job creation, persistence, and invalid job input.
+- **Outcome:** `3` API tests pass without modifying the development database.
+- **Evidence:** `uv run pytest tests/test_api.py -q`.
+- **Next checkpoint:** Add parser, matching, scoring, and CV upload test coverage.
+
 ## Current Checkpoint
 
 - **Branch:** `feat/api`
-- **Status:** Core API, persistence, parsing, matching, and scoring are implemented.
-- **Next milestone:** Build focused automated coverage around the end-to-end API flows and matching/scoring behavior.
+- **Status:** Core API, persistence, parsing, matching, scoring, and the first isolated API tests are implemented.
+- **Next milestone:** Build focused automated coverage around parsing, matching/scoring, and CV upload behavior.
 
 ## Milestone Entry Template
 
