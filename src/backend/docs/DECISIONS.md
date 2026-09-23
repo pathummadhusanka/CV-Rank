@@ -56,6 +56,14 @@ Only record decisions that materially affect backend architecture, data behavior
 - **Reason:** Explicit response contracts keep the API stable for the application client and prevent accidental exposure of internal fields.
 - **Impact:** Changes to returned fields should update the schema, endpoint tests, and API documentation together.
 
+## Deterministic Candidate Ranking
+
+- **Date:** 2026-09-24
+- **Status:** Accepted
+- **Decision:** Rank candidates by descending overall score and use the CV ID as the deterministic tie-breaker.
+- **Reason:** Ranking must be reproducible for the same stored data and must not depend on database row order.
+- **Impact:** The job-level matching endpoint returns stable ranks. Changes to score calculation can change ranking, while equal scores remain predictably ordered.
+
 ## Decision Entry Template
 
 ### Decision title

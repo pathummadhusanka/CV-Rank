@@ -79,3 +79,16 @@ class MatchingResponse(BaseModel):
     cv_id: str
     match: MatchResult
     score: ScoreResult
+
+
+class RankedCandidate(BaseModel):
+    rank: int
+    cv_id: str
+    filename: str
+    match: MatchResult
+    score: ScoreResult
+
+
+class RankingResponse(BaseModel):
+    job_id: str
+    candidates: list[RankedCandidate]

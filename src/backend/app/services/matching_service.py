@@ -91,3 +91,28 @@ def match_candidate(candidate, job) -> dict:
             job.education,
         ),
     }
+
+
+def rank_candidates(candidates, job, score_calculator) -> list[dict]:
+    ranked = []
+
+    for candidate in candidates:
+        match = match_candidate(candidate, job)
+        score = score_calculator(match)
+        ranked.append(
+            {
+                "cv_id": candidate.id,
+                "filename": candidate.filename,
+                "match": match,
+                "score": score,
+            }
+        )
+
+    ranked.sort(
+        key=lambda item: (-item["score"]["overall"], item["cv_id"]),
+    )
+
+    for rank, candidate in enumerate(ranked, start=1):
+        candidate["rank"] = rank
+
+    return ranked

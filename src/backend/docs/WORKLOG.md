@@ -50,11 +50,18 @@ The worklog tracks meaningful backend milestones rather than individual commits 
 - **Evidence:** `uv run pytest -q`.
 - **Next checkpoint:** Validate the contracts from the application client and add pagination/filtering only when required.
 
+## 2026-09-24 - Job-Level Ranking Milestone
+
+- **Scope:** Rank every stored CV against one job and return rank, score breakdown, and match details.
+- **Outcome:** `POST /matching/jobs/{job_id}` now returns candidates in descending overall score order, with deterministic CV ID ordering for ties.
+- **Evidence:** Six focused matching tests pass, including empty results and missing jobs.
+- **Next checkpoint:** Add batch CV upload and per-file failure reporting for the multi-CV workflow.
+
 ## Current Checkpoint
 
 - **Branch:** `feat/api`
-- **Status:** Core API, persistence, parsing, matching, scoring, typed read endpoints, and automated behavior coverage are implemented.
-- **Next milestone:** Validate the API contracts from the application client and define pagination/filtering needs.
+- **Status:** Core API, persistence, parsing, matching, scoring, typed read endpoints, ranking, and automated behavior coverage are implemented.
+- **Next milestone:** Add batch CV upload with per-file results.
 
 ## Milestone Entry Template
 
