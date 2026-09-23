@@ -29,25 +29,25 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 			case "strong":
 				return (
 					<span className="inline-flex items-center rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-2 py-0.5 text-[11px] font-semibold">
-						Strong Match
+						Match Found
 					</span>
 				);
 			case "partial":
 				return (
 					<span className="inline-flex items-center rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 px-2 py-0.5 text-[11px] font-semibold">
-						Partial Match
+						Partial
 					</span>
 				);
 			case "contradictory":
 				return (
 					<span className="inline-flex items-center rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 px-2 py-0.5 text-[11px] font-semibold">
-						Contradictory
+						Conflict
 					</span>
 				);
 			default:
 				return (
 					<span className="inline-flex items-center rounded-md bg-muted text-muted-foreground border border-border px-2 py-0.5 text-[11px] font-medium">
-						No Evidence
+						Missing Evidence
 					</span>
 				);
 		}
@@ -85,7 +85,7 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 
 					<div className="flex items-center gap-3">
 						<div className={`px-3 py-1.5 rounded-lg border text-center ${getScoreColor(candidate.fitScore)}`}>
-							<div className="text-xs uppercase tracking-wider font-semibold">Fit Score</div>
+							<div className="text-xs uppercase tracking-wider font-semibold">Overall Fit</div>
 							<div className="text-xl font-black">{candidate.fitScore}%</div>
 						</div>
 
@@ -100,9 +100,44 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 				</div>
 
 				{/* Modal Body */}
-				<div className="p-6 overflow-y-auto space-y-6 flex-1">
+				<div className="p-6 overflow-y-auto space-y-5 flex-1">
+					{/* Backend Sub-Scores Breakdown */}
+					{candidate.scores && (
+						<div className="rounded-lg border border-border bg-muted/40 p-3.5 space-y-2">
+							<div className="text-xs font-semibold text-foreground uppercase tracking-wider">
+								Weighted Scoring Formula
+							</div>
+							<div className="grid grid-cols-3 gap-2 text-center">
+								<div className="bg-background rounded-md p-2 border border-border/60">
+									<span className="text-[10px] text-muted-foreground uppercase block font-medium">
+										Skills (60%)
+									</span>
+									<span className="text-sm font-bold text-foreground">
+										{candidate.scores.skills}%
+									</span>
+								</div>
+								<div className="bg-background rounded-md p-2 border border-border/60">
+									<span className="text-[10px] text-muted-foreground uppercase block font-medium">
+										Experience (25%)
+									</span>
+									<span className="text-sm font-bold text-foreground">
+										{candidate.scores.experience}%
+									</span>
+								</div>
+								<div className="bg-background rounded-md p-2 border border-border/60">
+									<span className="text-[10px] text-muted-foreground uppercase block font-medium">
+										Education (15%)
+									</span>
+									<span className="text-sm font-bold text-foreground">
+										{candidate.scores.education}%
+									</span>
+								</div>
+							</div>
+						</div>
+					)}
+
 					{/* Explanation */}
-					<div className="rounded-lg border border-border bg-muted/30 p-4 space-y-1">
+					<div className="rounded-lg border border-border bg-muted/20 p-3.5 space-y-1">
 						<div className="text-xs font-semibold text-foreground uppercase tracking-wider">
 							Evaluation Summary
 						</div>
@@ -112,14 +147,14 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 					</div>
 
 					{/* Strengths & Gaps Grid */}
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 						{/* Strengths */}
-						<div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4 space-y-2">
+						<div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3.5 space-y-1.5">
 							<div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
 								<span>✓</span>
-								<span>Key Strengths</span>
+								<span>Matched Criteria</span>
 							</div>
-							<ul className="text-xs space-y-1.5 text-foreground/90 list-disc list-inside">
+							<ul className="text-xs space-y-1 text-foreground/90 list-disc list-inside">
 								{candidate.strengths.map((str, idx) => (
 									<li key={idx} className="leading-snug">{str}</li>
 								))}
@@ -127,12 +162,12 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 						</div>
 
 						{/* Gaps */}
-						<div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 space-y-2">
-							<div className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-								<span>⚠</span>
-								<span>Areas of Gap</span>
+						<div className="rounded-lg border border-rose-500/20 bg-rose-500/5 p-3.5 space-y-1.5">
+							<div className="text-xs font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+								<span>✕</span>
+								<span>Missing Requirements</span>
 							</div>
-							<ul className="text-xs space-y-1.5 text-foreground/90 list-disc list-inside">
+							<ul className="text-xs space-y-1 text-foreground/90 list-disc list-inside">
 								{candidate.gaps.map((gap, idx) => (
 									<li key={idx} className="leading-snug">{gap}</li>
 								))}
@@ -141,14 +176,14 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 					</div>
 
 					{/* Requirement Breakdown */}
-					<div className="space-y-3">
+					<div className="space-y-2">
 						<div className="text-xs font-bold text-foreground uppercase tracking-wider">
-							Requirement Match &amp; CV Evidence
+							Detailed Evidence Breakdown
 						</div>
 
 						<div className="divide-y divide-border/60 rounded-lg border border-border overflow-hidden">
 							{candidate.matches.map((item, idx) => (
-								<div key={idx} className="p-3.5 space-y-1.5 bg-card">
+								<div key={idx} className="p-3 space-y-1 bg-card">
 									<div className="flex items-center justify-between gap-2">
 										<div className="flex items-center gap-2">
 											<span className="text-xs font-semibold text-foreground capitalize">

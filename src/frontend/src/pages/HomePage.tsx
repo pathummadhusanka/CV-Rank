@@ -5,7 +5,7 @@ import { JobRequirementsCard } from "@/components/JobRequirementsCard";
 import { CVUploader, type UploadedCandidate } from "@/components/CVUploader";
 import { CandidateLeaderboard } from "@/components/CandidateLeaderboard";
 import { CandidateEvidenceModal } from "@/components/CandidateEvidenceModal";
-import { evaluateCandidates } from "@/lib/rankingEngine";
+import { evaluateCandidatesLive } from "@/lib/rankingEngine";
 import { getStoredJobs, saveStoredJob } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import type { CreateJobResponse } from "@/lib/api";
@@ -51,15 +51,15 @@ export default function HomePage() {
 		setShowNewJobForm(false);
 	};
 
-	const handleRunEvaluation = () => {
+	const handleRunEvaluation = async () => {
 		if (!activeJob || candidates.length === 0) return;
 		setIsAnalyzing(true);
-		// Simulate brief analysis calculation delay
-		setTimeout(() => {
-			const results = evaluateCandidates(activeJob, candidates);
+		try {
+			const results = await evaluateCandidatesLive(activeJob, candidates);
 			setRankedResults(results);
+		} finally {
 			setIsAnalyzing(false);
-		}, 600);
+		}
 	};
 
 	const handleCandidatesChange = (updated: UploadedCandidate[]) => {

@@ -114,19 +114,29 @@ export function CandidateLeaderboard({
 									<div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-0.5">
 										<span className="font-mono text-[11px] truncate max-w-xs">{candidate.filename}</span>
 										<span>&bull;</span>
-										<div className="flex items-center gap-1.5">
-											<span className="text-emerald-600 dark:text-emerald-400 font-medium">
-												{strongCount} Strong
-											</span>
-											<span>&bull;</span>
-											<span className="text-amber-600 dark:text-amber-400 font-medium">
-												{partialCount} Partial
-											</span>
-											<span>&bull;</span>
-											<span className="text-muted-foreground">
-												{missingCount} Missing
-											</span>
-										</div>
+										{candidate.scores ? (
+											<div className="flex items-center gap-1.5 font-mono text-[11px]">
+												<span className="text-foreground">Skills: {candidate.scores.skills}%</span>
+												<span>&bull;</span>
+												<span className="text-foreground">Exp: {candidate.scores.experience}%</span>
+												<span>&bull;</span>
+												<span className="text-foreground">Edu: {candidate.scores.education}%</span>
+											</div>
+										) : (
+											<div className="flex items-center gap-1.5">
+												<span className="text-emerald-600 dark:text-emerald-400 font-medium">
+													{strongCount} Strong
+												</span>
+												<span>&bull;</span>
+												<span className="text-amber-600 dark:text-amber-400 font-medium">
+													{partialCount} Partial
+												</span>
+												<span>&bull;</span>
+												<span className="text-muted-foreground">
+													{missingCount} Missing
+												</span>
+											</div>
+										)}
 									</div>
 								</div>
 							</div>
