@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from app.routes.cvs import router as cvs_router
+
 
 app = FastAPI()
 
@@ -10,3 +12,5 @@ def health_check():
         "version": "0.1.0",
         "status": "ok",
     }
+
+app.include_router(cvs_router)
