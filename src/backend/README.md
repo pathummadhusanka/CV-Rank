@@ -21,6 +21,12 @@ Optional variables:
 - Change DB Server URL (Default is set to SQLite: sqlite:///storage/cv_rank.db).  
 `DATABASE_URL`=sqlite:///storage/cv_rank.db
 
+- Configure the AI provider at runtime. The selected provider is OpenRouter.
+- `AI_PROVIDER`=openrouter
+- `AI_MODEL`=openai/gpt-4o-mini
+- `AI_API_KEY`=your-openrouter-key
+- `AI_BASE_URL`=https://openrouter.ai/api/v1
+
 ### Run
 
 ```bash

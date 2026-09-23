@@ -30,9 +30,9 @@ Only record decisions that materially affect backend architecture, data behavior
 
 - **Date:** 2026-09-24
 - **Status:** Accepted
-- **Decision:** Use a hosted, structured-output-capable LLM for job requirement extraction, CV understanding, requirement-level matching, and evidence generation. Do not train or fine-tune a model for the MVP, and defer embeddings.
+- **Decision:** Use OpenRouter as the hosted, OpenAI-compatible LLM API for job requirement extraction, CV understanding, requirement-level matching, and evidence generation. Start with `openai/gpt-4o-mini`; keep the model configurable. Do not train or fine-tune a model for the MVP, and defer embeddings.
 - **Reason:** The assignment requires AI-based scoring and semantic matching, while the project has no labeled training dataset. A hosted LLM meets the requirement without introducing a training pipeline.
-- **Impact:** Provider, model, and API key are runtime configuration. AI outputs must be validated before scoring, and provider failures must produce controlled API errors. Keyword-only matching is not an acceptable fallback for successful analysis.
+- **Impact:** The OpenRouter provider, model, and API key are runtime configuration. AI outputs must be validated before scoring, and provider failures must produce controlled API errors. Keyword-only matching is not an acceptable fallback for successful analysis.
 
 ## Isolated Database for Automated Tests
 

@@ -78,6 +78,13 @@ The worklog tracks meaningful backend milestones rather than individual commits 
 - **Evidence:** `uv run pytest tests/test_ai.py -q` passes with `4` tests.
 - **Next checkpoint:** Implement the hosted provider adapter and integrate validated AI assessments into job analysis and ranking.
 
+## 2026-09-24 - OpenRouter Provider Selection
+
+- **Scope:** Select the hosted LLM API for the first real provider adapter.
+- **Outcome:** OpenRouter is selected with `openai/gpt-4o-mini` as the initial configurable model. API keys remain runtime-only; local tests continue using the mock provider.
+- **Evidence:** `uv run pytest tests/test_ai.py -q` passes with `5` tests.
+- **Next checkpoint:** Implement the OpenRouter adapter with structured response validation and controlled provider failures.
+
 ## Current Checkpoint
 
 - **Branch:** `feat/ai`

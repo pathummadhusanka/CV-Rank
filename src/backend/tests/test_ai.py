@@ -67,9 +67,16 @@ def test_mock_provider_returns_validated_ai_outputs():
     )
 
 
-def test_ai_settings_default_to_safe_local_mock():
+def test_ai_settings_default_to_openrouter_without_exposing_credentials():
     settings = Settings()
 
-    assert settings.ai_provider == "mock"
+    assert settings.ai_provider == "openrouter"
     assert settings.ai_api_key is None
-    assert settings.ai_model == "gpt-4o-mini"
+    assert settings.ai_model == "openai/gpt-4o-mini"
+    assert settings.ai_base_url == "https://openrouter.ai/api/v1"
+
+
+def test_mock_provider_can_be_selected_for_local_tests():
+    settings = Settings(ai_provider="mock")
+
+    assert settings.ai_provider == "mock"
