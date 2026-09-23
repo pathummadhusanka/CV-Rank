@@ -70,6 +70,45 @@ export async function createJob(payload: CreateJobPayload): Promise<CreateJobRes
 	return handleResponse<CreateJobResponse>(res);
 }
 
+export interface SkillMatchResult {
+	matched: string[];
+	missing: string[];
+	match_count: number;
+	required_count: number;
+}
+
+export interface ExperienceMatchResult {
+	required: number | null;
+	candidate: number | null;
+	matched: boolean;
+}
+
+export interface EducationMatchResult {
+	required: string | null;
+	candidate: string | null;
+	matched: boolean;
+}
+
+export interface CandidateMatchDetails {
+	skills: SkillMatchResult;
+	experience: ExperienceMatchResult;
+	education: EducationMatchResult;
+}
+
+export interface CandidateMatchScores {
+	skills: number;
+	experience: number;
+	education: number;
+	overall: number;
+}
+
+export interface MatchCVResponse {
+	job_id: string;
+	cv_id: string;
+	match: CandidateMatchDetails;
+	score: CandidateMatchScores;
+}
+
 export async function uploadCV(file: File): Promise<UploadCVResponse> {
 	const formData = new FormData();
 	formData.append("file", file);
@@ -80,3 +119,11 @@ export async function uploadCV(file: File): Promise<UploadCVResponse> {
 	});
 	return handleResponse<UploadCVResponse>(res);
 }
+
+export async function matchCVToJob(jobId: string, cvId: string): Promise<MatchCVResponse> {
+	const res = await fetch(`/api/matching/jobs/${jobId}/cvs/${cvId}`, {
+		method: "POST",
+	});
+	return handleResponse<MatchCVResponse>(res);
+}
+
