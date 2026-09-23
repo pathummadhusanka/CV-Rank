@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { JobCreator } from "@/components/JobCreator";
 import { JobRequirementsCard } from "@/components/JobRequirementsCard";
+import { CVUploader, type UploadedCandidate } from "@/components/CVUploader";
 import type { CreateJobResponse } from "@/lib/api";
 
 export default function HomePage() {
 	const [activeJob, setActiveJob] = useState<CreateJobResponse | null>(null);
+	const [candidates, setCandidates] = useState<UploadedCandidate[]>([]);
 
 	return (
 		<div className="space-y-6">
@@ -25,28 +27,46 @@ export default function HomePage() {
 				) : (
 					<JobRequirementsCard
 						job={activeJob}
-						onReset={() => setActiveJob(null)}
+						onReset={() => {
+							setActiveJob(null);
+							setCandidates([]);
+						}}
 					/>
 				)}
 			</section>
 
-			{/* Step 2 Preview: CV Upload (To be connected in Step 4) */}
-			<section className="rounded-xl border border-dashed border-border/80 bg-muted/20 p-6 text-center">
-				<div className="max-w-md mx-auto space-y-2">
-					<div className="size-10 rounded-full bg-muted flex items-center justify-center mx-auto text-muted-foreground font-semibold text-sm">
-						2
-					</div>
-					<h3 className="text-sm font-semibold text-foreground">
-						Step 2: Upload Candidate CVs
-					</h3>
-					<p className="text-xs text-muted-foreground">
-						{activeJob
-							? `Upload candidate PDF CVs to match against "${activeJob.title}".`
-							: "Define a job description above to start uploading and evaluating candidate CVs."}
-					</p>
-				</div>
+			{/* Step 2: Upload Candidate CVs */}
+			<section>
+				<CVUploader
+					onCandidatesChange={setCandidates}
+					disabled={!activeJob}
+				/>
 			</section>
+
+			{/* Step 3 Preview: Staging & Ranking Status */}
+			{activeJob && candidates.length > 0 && (
+				<section className="rounded-xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+					<div className="space-y-1">
+						<div className="flex items-center gap-2">
+							<span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+							<span className="text-xs font-bold text-foreground uppercase tracking-wider">
+								Ready for Ranking
+							</span>
+						</div>
+						<p className="text-xs text-muted-foreground">
+							{candidates.length} candidate CV{candidates.length === 1 ? "" : "s"} processed for &ldquo;{activeJob.title}&rdquo;.
+						</p>
+					</div>
+
+					<div className="flex items-center gap-2">
+						<span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground border border-border">
+							{candidates.length} Staged Candidate{candidates.length === 1 ? "" : "s"}
+						</span>
+					</div>
+				</section>
+			)}
 		</div>
 	);
 }
+
 
