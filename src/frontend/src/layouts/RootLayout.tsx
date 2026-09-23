@@ -31,7 +31,20 @@ export default function RootLayout() {
 									)
 								}
 							>
-								Workspace
+								Evaluations
+							</NavLink>
+							<NavLink
+								to="/jobs"
+								className={({ isActive }) =>
+									cn(
+										"px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+										isActive
+											? "bg-secondary text-secondary-foreground font-semibold"
+											: "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+									)
+								}
+							>
+								Jobs Library
 							</NavLink>
 							<NavLink
 								to="/dashboard"
