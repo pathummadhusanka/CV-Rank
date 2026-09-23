@@ -64,11 +64,18 @@ The worklog tracks meaningful backend milestones rather than individual commits 
 - **Evidence:** `uv run pytest -q` passes with `20` tests. Image build is pending because the local Docker Desktop Linux engine is not running.
 - **Next checkpoint:** Build and smoke-test the image after Docker Desktop is started.
 
+## 2026-09-24 - AI Architecture Decision
+
+- **Scope:** Align the implementation plan with the assignment requirement for AI-based scoring and semantic matching.
+- **Outcome:** The MVP will use a hosted structured-output LLM for requirement extraction, CV understanding, matching classifications, and evidence. Python will validate AI results, aggregate the weighted score, and rank candidates. No training or embeddings are planned for the first version.
+- **Evidence:** Updated [SPEC.md](../../../SPEC.md) and [DECISIONS.md](DECISIONS.md#hosted-llm-for-semantic-assessment).
+- **Next checkpoint:** Implement the provider interface, validated AI schemas, mock provider, and runtime configuration on `feat/ai`.
+
 ## Current Checkpoint
 
-- **Branch:** `feat/api`
-- **Status:** Core API, persistence, parsing, matching, scoring, typed read endpoints, ranking, automated behavior coverage, and Docker configuration are implemented.
-- **Next milestone:** Add batch CV upload with per-file results.
+- **Branch:** `feat/ai`
+- **Status:** Core API, persistence, parsing, matching, scoring, typed read endpoints, ranking, automated behavior coverage, and Docker configuration are implemented. AI semantic assessment is not implemented yet.
+- **Next milestone:** Add the provider interface, validated AI schemas, mock provider, and runtime configuration.
 
 ## Milestone Entry Template
 

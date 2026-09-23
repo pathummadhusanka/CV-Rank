@@ -37,7 +37,7 @@ The user can:
 * PDF CV processing
 * AI-based requirement extraction
 * AI-based semantic CV matching
-* Weighted candidate scoring
+* AI-derived requirement scoring with deterministic aggregation
 * Candidate ranking
 * Score breakdown
 * Evidence and explanation
@@ -96,14 +96,14 @@ The system should focus on requirements that are relevant to the role.
 
 AI evaluates each candidate against the extracted requirements.
 
-Each requirement receives one classification:
+Each requirement receives one AI-generated classification:
 
 * Strong match
 * Partial match
 * No evidence
 * Contradictory evidence
 
-The AI must provide supporting evidence where available.
+The AI must provide supporting evidence where available and must not rely on exact keyword overlap alone.
 
 The system must not invent qualifications or experience.
 
@@ -111,11 +111,11 @@ Missing information is treated as no evidence, not proof that the candidate lack
 
 ## 8. Scoring
 
-The Fit Score is a value from 0 to 100.
+The Fit Score is a value from 0 to 100 and must use AI-generated requirement assessments.
 
 The score represents how well the available evidence in the CV matches the requirements of the job.
 
-Match values:
+The application maps the validated AI classifications to numeric match values:
 
 * Strong match: 1.0
 * Partial match: 0.5
@@ -125,10 +125,10 @@ Match values:
 The score is calculated by application code using the requirement weights.
 
 ```text
-score = sum(weight × match value) / sum(weights) × 100
+score = sum(weight × AI match value) / sum(weights) × 100
 ```
 
-The AI does not directly determine the final score.
+The AI determines the requirement-level match classification and evidence. Application code validates those results, performs the weighted aggregation, and owns the final ranking. The AI must not be asked to invent or directly return the final aggregate score.
 
 ## 9. Ranking
 
@@ -146,6 +146,8 @@ AI is responsible for:
 * Semantic matching
 * Match classification
 * Evidence and explanations
+
+The first implementation uses one hosted, structured-output-capable language model for these tasks. Model and provider configuration are supplied through environment variables. No model training or fine-tuning is required. Embeddings are deferred unless later scale or retrieval needs justify them.
 
 Application code is responsible for:
 
@@ -168,6 +170,8 @@ The system should handle:
 * CV extraction failures
 * AI/API failures
 * Invalid AI responses
+* Missing AI API keys
+* AI timeouts, rate limits, and provider failures
 
 Errors should be shown as clear user-facing messages. Internal errors and stack traces should not be exposed.
 
@@ -179,7 +183,7 @@ Errors should be shown as clear user-facing messages. Internal errors and stack 
 * The job description contains enough information to identify requirements.
 * CVs contain enough readable information for evaluation.
 * Missing information is treated as no evidence.
-* AI results may be incorrect and require human review.
+* AI results may be incorrect, incomplete, or unavailable and require human review.
 * The hiring team makes the final decision.
 
 ## 13. Security and Privacy

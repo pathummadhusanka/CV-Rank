@@ -1,9 +1,3 @@
----
-noteId: "28034450b77711f1b7d36fb7948e8c50"
-tags: []
-
----
-
 # Backend Decisions
 
 Only record decisions that materially affect backend architecture, data behavior, delivery workflow, or future change cost. Routine implementation choices belong in code and commits.
@@ -24,13 +18,21 @@ Only record decisions that materially affect backend architecture, data behavior
 - **Reason:** It keeps local development simple and already supports the CV and job data models.
 - **Impact:** The path is relative to the backend working directory. A future deployment should use an application-rooted or deployment-provided path to avoid creating a different database from another working directory.
 
-## Application-Owned Rule-Based Scoring
+## Application-Owned Score Aggregation
 
 - **Date:** 2026-09-23
+- **Status:** Superseded by Hosted LLM for Semantic Assessment
+- **Decision:** Keep weighted score aggregation and ranking in application code.
+- **Reason:** Deterministic aggregation makes results reproducible, testable, and explainable while allowing AI to provide the semantic requirement assessments required by the assignment.
+- **Impact:** Score weights and classification mapping remain code-owned, but match values must come from validated AI output.
+
+## Hosted LLM for Semantic Assessment
+
+- **Date:** 2026-09-24
 - **Status:** Accepted
-- **Decision:** Keep the final candidate score and ranking in application code rather than delegating the numeric result to an AI model.
-- **Reason:** Deterministic scoring makes results reproducible, testable, and explainable. AI or parsers may provide structured evidence, but application code owns the calculation.
-- **Impact:** Changes to score weights or match values require code and focused tests. See the scoring requirements in `SPEC.md`.
+- **Decision:** Use a hosted, structured-output-capable LLM for job requirement extraction, CV understanding, requirement-level matching, and evidence generation. Do not train or fine-tune a model for the MVP, and defer embeddings.
+- **Reason:** The assignment requires AI-based scoring and semantic matching, while the project has no labeled training dataset. A hosted LLM meets the requirement without introducing a training pipeline.
+- **Impact:** Provider, model, and API key are runtime configuration. AI outputs must be validated before scoring, and provider failures must produce controlled API errors. Keyword-only matching is not an acceptable fallback for successful analysis.
 
 ## Isolated Database for Automated Tests
 
