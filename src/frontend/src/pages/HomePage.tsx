@@ -6,7 +6,13 @@ import { CVUploader, type UploadedCandidate } from "@/components/CVUploader";
 import { CandidateLeaderboard } from "@/components/CandidateLeaderboard";
 import { CandidateEvidenceModal } from "@/components/CandidateEvidenceModal";
 import { evaluateCandidatesLive } from "@/lib/rankingEngine";
-import { getStoredJobs, saveStoredJob } from "@/lib/storage";
+import {
+	getStoredJobs,
+	saveStoredJob,
+	saveStoredProject,
+	getStoredProjectById,
+	type EvaluationProject,
+} from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import type { CreateJobResponse } from "@/lib/api";
 import type { RankedCandidate } from "@/types/ranking";
@@ -20,9 +26,24 @@ export default function HomePage() {
 	const [rankedResults, setRankedResults] = useState<RankedCandidate[]>([]);
 	const [selectedCandidate, setSelectedCandidate] = useState<RankedCandidate | null>(null);
 	const [isAnalyzing, setIsAnalyzing] = useState(false);
+	const [savedProjectName, setSavedProjectName] = useState("");
+	const [isProjectSaved, setIsProjectSaved] = useState(false);
 
-	// Load job from query parameter if present
+	// Load job or saved project from query parameter if present
 	useEffect(() => {
+		const projectId = searchParams.get("projectId");
+		if (projectId) {
+			const project = getStoredProjectById(projectId);
+			if (project) {
+				setActiveJob(project.job);
+				setCandidates(project.candidates);
+				setRankedResults(project.results);
+				setSavedProjectName(project.name);
+				setIsProjectSaved(true);
+				return;
+			}
+		}
+
 		const jobId = searchParams.get("jobId");
 		if (jobId) {
 			const found = storedJobs.find((j) => j.id === jobId);
@@ -41,6 +62,7 @@ export default function HomePage() {
 		setShowNewJobForm(false);
 		setCandidates([]);
 		setRankedResults([]);
+		setIsProjectSaved(false);
 	};
 
 	const handleJobCreated = (newJob: CreateJobResponse) => {
@@ -49,17 +71,36 @@ export default function HomePage() {
 		setActiveJob(newJob);
 		setSearchParams({ jobId: newJob.id });
 		setShowNewJobForm(false);
+		setIsProjectSaved(false);
 	};
 
 	const handleRunEvaluation = async () => {
 		if (!activeJob || candidates.length === 0) return;
 		setIsAnalyzing(true);
+		setIsProjectSaved(false);
 		try {
 			const results = await evaluateCandidatesLive(activeJob, candidates);
 			setRankedResults(results);
+			setSavedProjectName(`${activeJob.title} - Batch ${new Date().toLocaleDateString()}`);
 		} finally {
 			setIsAnalyzing(false);
 		}
+	};
+
+	const handleSaveProject = () => {
+		if (!activeJob || rankedResults.length === 0) return;
+		const name = savedProjectName.trim() || `${activeJob.title} - Run`;
+		const newProject: EvaluationProject = {
+			id: `proj-${Date.now()}`,
+			name,
+			createdAt: new Date().toISOString(),
+			job: activeJob,
+			candidates,
+			results: rankedResults,
+		};
+		saveStoredProject(newProject);
+		setIsProjectSaved(true);
+		setSearchParams({ projectId: newProject.id });
 	};
 
 	const handleCandidatesChange = (updated: UploadedCandidate[]) => {
@@ -201,7 +242,38 @@ export default function HomePage() {
 
 			{/* Step 3: Leaderboard (when evaluation has been computed) */}
 			{rankedResults.length > 0 && (
-				<section>
+				<section className="space-y-4">
+					{/* Project Save Bar */}
+					<div className="rounded-xl border border-border bg-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+						<div className="flex items-center gap-3 flex-1 min-w-0">
+							<span className="text-xs font-semibold text-foreground uppercase tracking-wider shrink-0">
+								Project Name:
+							</span>
+							<input
+								type="text"
+								value={savedProjectName}
+								onChange={(e) => {
+									setSavedProjectName(e.target.value);
+									setIsProjectSaved(false);
+								}}
+								placeholder="e.g. Python Backend - Round 1"
+								className="w-full max-w-sm rounded-md border border-input bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+							/>
+						</div>
+
+						<div className="flex items-center gap-2 shrink-0">
+							{isProjectSaved ? (
+								<span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
+									✓ Saved to Projects History
+								</span>
+							) : (
+								<Button size="sm" onClick={handleSaveProject}>
+									Save Evaluation Project
+								</Button>
+							)}
+						</div>
+					</div>
+
 					<CandidateLeaderboard
 						candidates={rankedResults}
 						onSelectCandidate={setSelectedCandidate}
