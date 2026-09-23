@@ -37,5 +37,5 @@ def get_session() -> Generator[Session, None, None]:
         yield session
 
 def create_tables():
-    from app.db.models import CV # Register the model
+    from app.db.models import CV, Job # Register the model
     Base.metadata.create_all(bind=engine)

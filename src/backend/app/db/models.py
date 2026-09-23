@@ -18,3 +18,14 @@ class CV(Base):
         DateTime,
         default=datetime.utcnow,
     )
+
+class Job(Base):
+    __tablename__ = "jobs"
+
+    id: Mapped[str] = mapped_column(primary_key=True)
+    title: Mapped[str]
+    description: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+    )
