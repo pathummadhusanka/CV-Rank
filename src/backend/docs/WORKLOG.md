@@ -29,11 +29,18 @@ The worklog tracks meaningful backend milestones rather than individual commits 
 - **Evidence:** `uv run pytest tests/test_api.py -q`.
 - **Next checkpoint:** Add parser, matching, scoring, and CV upload test coverage.
 
+## 2026-09-23 - Core Behavior Test Coverage
+
+- **Scope:** Job and candidate parsers, skill/experience/education matching, weighted scoring, rejected uploads, and successful PDF uploads.
+- **Outcome:** The backend test suite has `10` passing tests and uses temporary SQLite databases plus temporary upload directories.
+- **Evidence:** `uv run pytest -q`.
+- **Next checkpoint:** Add matching endpoint tests and decide which read endpoints are needed for the application workflow.
+
 ## Current Checkpoint
 
 - **Branch:** `feat/api`
-- **Status:** Core API, persistence, parsing, matching, scoring, and the first isolated API tests are implemented.
-- **Next milestone:** Build focused automated coverage around parsing, matching/scoring, and CV upload behavior.
+- **Status:** Core API, persistence, parsing, matching, scoring, and automated behavior coverage are implemented.
+- **Next milestone:** Test the matching endpoint end to end and define the read API needed by the application workflow.
 
 ## Milestone Entry Template
 
