@@ -50,11 +50,25 @@ The worklog tracks meaningful backend milestones rather than individual commits 
 - **Evidence:** `uv run pytest -q`.
 - **Next checkpoint:** Validate the contracts from the application client and add pagination/filtering only when required.
 
+## 2026-09-24 - Job-Level Ranking Milestone
+
+- **Scope:** Rank every stored CV against one job and return rank, score breakdown, and match details.
+- **Outcome:** `POST /matching/jobs/{job_id}` now returns candidates in descending overall score order, with deterministic CV ID ordering for ties.
+- **Evidence:** Six focused matching tests pass, including empty results and missing jobs.
+- **Next checkpoint:** Add batch CV upload and per-file failure reporting for the multi-CV workflow.
+
+## 2026-09-24 - Backend Containerization Milestone
+
+- **Scope:** Docker image, build-context exclusions, healthcheck, and persistent storage instructions.
+- **Outcome:** The backend has a Dockerfile that runs Uvicorn on `0.0.0.0:8000` and a named volume can preserve SQLite data and uploaded CVs.
+- **Evidence:** `uv run pytest -q` passes with `20` tests. Image build is pending because the local Docker Desktop Linux engine is not running.
+- **Next checkpoint:** Build and smoke-test the image after Docker Desktop is started.
+
 ## Current Checkpoint
 
 - **Branch:** `feat/api`
-- **Status:** Core API, persistence, parsing, matching, scoring, typed read endpoints, and automated behavior coverage are implemented.
-- **Next milestone:** Validate the API contracts from the application client and define pagination/filtering needs.
+- **Status:** Core API, persistence, parsing, matching, scoring, typed read endpoints, ranking, automated behavior coverage, and Docker configuration are implemented.
+- **Next milestone:** Add batch CV upload with per-file results.
 
 ## Milestone Entry Template
 
