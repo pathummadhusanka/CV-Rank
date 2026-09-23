@@ -25,6 +25,9 @@ class Job(Base):
     id: Mapped[str] = mapped_column(primary_key=True)
     title: Mapped[str]
     description: Mapped[str] = mapped_column(Text)
+    required_skills: Mapped[str] = mapped_column(Text, default="")
+    experience_years: Mapped[int | None]
+    education: Mapped[str | None]
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
