@@ -3,7 +3,11 @@
 ## API Endpoints
 
 * `GET /health` - API health check
+* `GET /jobs` - List stored job summaries
+* `POST /jobs` - Create a job description
+* `GET /cvs` - List processed CV summaries
 * `POST /cvs` - Upload CV in PDF format
+* `POST /matching/jobs/{job_id}/cvs/{cv_id}` - Match a CV against a job
 * Swagger UI: `http://127.0.0.1:8000/docs`
 
 ## Configurations
