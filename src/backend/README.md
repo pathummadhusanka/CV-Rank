@@ -28,3 +28,21 @@ uv run main.py
 ```
 
 API: `http://127.0.0.1:8000`
+
+### Docker
+
+Build and start the backend from `src/backend`:
+
+```bash
+docker build -t cv-rank-backend .
+docker volume create cv-rank-storage
+docker run --rm \
+	--name cv-rank-backend \
+	-p 8000:8000 \
+	-v cv-rank-storage:/app/storage \
+	cv-rank-backend
+```
+
+The API is available at `http://127.0.0.1:8000`, and the Swagger UI is available at `http://127.0.0.1:8000/docs`.
+
+The named volume preserves the SQLite database and uploaded CV files when the container is replaced. Pass `--env-file .env` to `docker run` when runtime environment variables are needed.

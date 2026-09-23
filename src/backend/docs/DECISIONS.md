@@ -64,6 +64,14 @@ Only record decisions that materially affect backend architecture, data behavior
 - **Reason:** Ranking must be reproducible for the same stored data and must not depend on database row order.
 - **Impact:** The job-level matching endpoint returns stable ranks. Changes to score calculation can change ranking, while equal scores remain predictably ordered.
 
+## Container Storage Uses a Named Volume
+
+- **Date:** 2026-09-24
+- **Status:** Accepted
+- **Decision:** Mount `/app/storage` as a named Docker volume for the SQLite database and uploaded CV files.
+- **Reason:** Both kinds of data must survive container replacement, while local database and candidate files must remain outside the image.
+- **Impact:** Container deployments must provide the storage volume. The image itself remains stateless apart from runtime memory.
+
 ## Decision Entry Template
 
 ### Decision title
