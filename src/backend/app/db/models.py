@@ -13,6 +13,11 @@ class CV(Base):
     filename: Mapped[str]
     file_path: Mapped[str]
     extracted_text: Mapped[str] = mapped_column(Text)
+
+    skills: Mapped[str] = mapped_column(Text, default="")
+    experience_years: Mapped[int | None]
+    education: Mapped[str | None]
+
     status: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(
         DateTime,

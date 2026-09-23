@@ -8,6 +8,7 @@ from app.services.cv_parser import extract_text
 from app.db.database import get_session
 from app.db.models import CV
 from app.services.cv_service import create_cv
+from app.services.candidate_parser import parse_candidate
 
 router = APIRouter(prefix="/cvs", tags=["CVs"])
 
@@ -62,6 +63,8 @@ async def upload_cv(
             status_code=400,
             detail="Could not extract text from the CV",
         )
+    
+    candidate = parse_candidate(text)
 
     create_cv(
         session=session,
@@ -69,6 +72,9 @@ async def upload_cv(
         filename=file.filename or "unknown.pdf",
         file_path=str(file_path),
         extracted_text=text,
+        skills=candidate["skills"],
+        experience_years=candidate["experience_years"],
+        education=candidate["education"],
     )
 
     return {
