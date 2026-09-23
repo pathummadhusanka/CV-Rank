@@ -49,3 +49,45 @@ def test_create_job_requires_title(client):
     )
 
     assert response.status_code == 422
+
+
+def test_list_jobs_returns_created_jobs(client):
+    create_response = client.post(
+        "/jobs",
+        json={
+            "title": "Backend Engineer",
+            "description": "Python and SQL experience required.",
+        },
+    )
+
+    response = client.get("/jobs")
+
+    assert response.status_code == 200
+    assert response.json()[0]["id"] == create_response.json()["id"]
+    assert response.json()[0]["title"] == "Backend Engineer"
+
+
+def test_list_cvs_returns_processed_cv_summaries(client, test_session_factory):
+    from app.db.models import CV
+
+    with test_session_factory() as session:
+        session.add(
+            CV(
+                id="cv-1",
+                filename="candidate.pdf",
+                file_path="storage/cvs/candidate.pdf",
+                extracted_text="Python developer",
+                skills="python",
+                experience_years=2,
+                education=None,
+                status="processed",
+            )
+        )
+        session.commit()
+
+    response = client.get("/cvs")
+
+    assert response.status_code == 200
+    assert response.json()[0]["id"] == "cv-1"
+    assert response.json()[0]["filename"] == "candidate.pdf"
+    assert response.json()[0]["status"] == "processed"

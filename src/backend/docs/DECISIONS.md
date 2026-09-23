@@ -40,6 +40,14 @@ Only record decisions that materially affect backend architecture, data behavior
 - **Reason:** Tests must be repeatable and must not change development data. The dependency override also exercises the real FastAPI route and persistence path.
 - **Impact:** New API tests should use the shared temporary-database fixture pattern. The development database remains available for manual API and viewer checks.
 
+## Read Endpoints Return Summaries
+
+- **Date:** 2026-09-23
+- **Status:** Accepted
+- **Decision:** `GET /jobs` and `GET /cvs` return persisted summaries; CV responses do not expose extracted text or stored file paths.
+- **Reason:** The application needs collection views, while extracted CV content and filesystem locations are internal data that should not be returned by default.
+- **Impact:** Detailed candidate content or file download behavior requires an explicit endpoint and contract later.
+
 ## Decision Entry Template
 
 ### Decision title

@@ -36,11 +36,18 @@ The worklog tracks meaningful backend milestones rather than individual commits 
 - **Evidence:** `uv run pytest -q`.
 - **Next checkpoint:** Add matching endpoint tests and decide which read endpoints are needed for the application workflow.
 
+## 2026-09-23 - Matching and Read API Milestone
+
+- **Scope:** End-to-end matching endpoint coverage plus `GET /jobs` and `GET /cvs` collection endpoints.
+- **Outcome:** Stored jobs and CVs can be listed as concise summaries, and matching returns component scores plus the weighted overall score.
+- **Evidence:** `7` focused endpoint tests pass; the API surface is documented in `README.md`.
+- **Next checkpoint:** Add pagination/filtering only when the application workflow requires it, then address the SQLAlchemy datetime deprecation.
+
 ## Current Checkpoint
 
 - **Branch:** `feat/api`
-- **Status:** Core API, persistence, parsing, matching, scoring, and automated behavior coverage are implemented.
-- **Next milestone:** Test the matching endpoint end to end and define the read API needed by the application workflow.
+- **Status:** Core API, persistence, parsing, matching, scoring, read endpoints, and automated behavior coverage are implemented.
+- **Next milestone:** Define application-facing pagination/filtering needs and remove the SQLAlchemy datetime deprecation.
 
 ## Milestone Entry Template
 

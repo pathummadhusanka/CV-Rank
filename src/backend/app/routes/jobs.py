@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db.database import get_session
+from app.db.models import Job
 from app.services.job_service import create_job
 from app.services.job_parser import parse_job_description
 
@@ -14,6 +15,26 @@ router = APIRouter(prefix="/jobs", tags=["Jobs"])
 class JobCreate(BaseModel):
     title: str
     description: str
+
+
+@router.get("")
+def list_jobs(
+    session: Session = Depends(get_session),
+):
+    jobs = session.query(Job).order_by(Job.created_at.desc()).all()
+
+    return [
+        {
+            "id": job.id,
+            "title": job.title,
+            "description": job.description,
+            "required_skills": job.required_skills,
+            "experience_years": job.experience_years,
+            "education": job.education,
+            "created_at": job.created_at,
+        }
+        for job in jobs
+    ]
 
 
 @router.post("")

@@ -18,6 +18,27 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 # Set maximum file size
 MAX_UPLOAD_SIZE = settings.max_upload_size_mb * 1024 * 1024
 
+
+@router.get("")
+def list_cvs(
+    session: Session = Depends(get_session),
+):
+    cvs = session.query(CV).order_by(CV.created_at.desc()).all()
+
+    return [
+        {
+            "id": cv.id,
+            "filename": cv.filename,
+            "skills": cv.skills,
+            "experience_years": cv.experience_years,
+            "education": cv.education,
+            "status": cv.status,
+            "created_at": cv.created_at,
+        }
+        for cv in cvs
+    ]
+
+
 @router.post("")
 async def upload_cv(
     file: UploadFile = File(...),
