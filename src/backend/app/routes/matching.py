@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_session
 from app.db.models import CV, Job
 from app.services.matching_service import match_candidate
+from app.services.scoring_service import calculate_score
 
 router = APIRouter(prefix="/matching", tags=["Matching"])
 
@@ -29,9 +30,11 @@ def match_cv_to_job(
         )
 
     result = match_candidate(cv, job)
+    score = calculate_score(result)
 
     return {
         "job_id": job.id,
         "cv_id": cv.id,
         "match": result,
+        "score": score,
     }
