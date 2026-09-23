@@ -1,0 +1,16 @@
+services:
+  backend:
+    build:
+      context: .
+    image: cv-rank-backend:latest
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-sqlite:///storage/cv_rank.db}
+      MAX_UPLOAD_SIZE_MB: ${MAX_UPLOAD_SIZE_MB:-5}
+    volumes:
+      - cv-rank-storage:/app/storage
+    restart: unless-stopped
+
+volumes:
+  cv-rank-storage:

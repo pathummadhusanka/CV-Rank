@@ -46,3 +46,17 @@ docker run --rm \
 The API is available at `http://127.0.0.1:8000`, and the Swagger UI is available at `http://127.0.0.1:8000/docs`.
 
 The named volume preserves the SQLite database and uploaded CV files when the container is replaced. Pass `--env-file .env` to `docker run` when runtime environment variables are needed.
+
+Compose can manage the image, port, environment, and storage volume together:
+
+```bash
+docker compose up --build
+```
+
+Stop the service with:
+
+```bash
+docker compose down
+```
+
+The named volume is retained by `docker compose down`; remove it explicitly with `docker compose down --volumes` when the development database and uploaded files should be deleted.
