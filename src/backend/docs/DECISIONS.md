@@ -48,6 +48,14 @@ Only record decisions that materially affect backend architecture, data behavior
 - **Reason:** The application needs collection views, while extracted CV content and filesystem locations are internal data that should not be returned by default.
 - **Impact:** Detailed candidate content or file download behavior requires an explicit endpoint and contract later.
 
+## Typed API Response Contracts
+
+- **Date:** 2026-09-23
+- **Status:** Accepted
+- **Decision:** Define Pydantic response models for job summaries, CV summaries, uploads, and matching results.
+- **Reason:** Explicit response contracts keep the API stable for the application client and prevent accidental exposure of internal fields.
+- **Impact:** Changes to returned fields should update the schema, endpoint tests, and API documentation together.
+
 ## Decision Entry Template
 
 ### Decision title

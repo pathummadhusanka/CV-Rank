@@ -66,3 +66,26 @@ def test_matching_endpoint_returns_not_found_for_missing_cv(client):
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Job not found"}
+
+
+def test_matching_endpoint_returns_not_found_when_cv_is_missing(
+    client,
+    test_session_factory,
+):
+    with test_session_factory() as session:
+        session.add(
+            Job(
+                id="job-1",
+                title="Backend Engineer",
+                description="Python backend role",
+                required_skills="python",
+                experience_years=None,
+                education=None,
+            )
+        )
+        session.commit()
+
+    response = client.post("/matching/jobs/job-1/cvs/missing")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "CV not found"}

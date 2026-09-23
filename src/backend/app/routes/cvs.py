@@ -7,6 +7,7 @@ from app.core.config import settings
 from app.services.cv_parser import extract_text
 from app.db.database import get_session
 from app.db.models import CV
+from app.schemas import CVSummary, CVUploadResponse
 from app.services.cv_service import create_cv
 from app.services.candidate_parser import parse_candidate
 
@@ -22,7 +23,7 @@ MAX_UPLOAD_SIZE = settings.max_upload_size_mb * 1024 * 1024
 @router.get("")
 def list_cvs(
     session: Session = Depends(get_session),
-):
+) -> list[CVSummary]:
     cvs = session.query(CV).order_by(CV.created_at.desc()).all()
 
     return [
@@ -43,7 +44,7 @@ def list_cvs(
 async def upload_cv(
     file: UploadFile = File(...),
     session: Session = Depends(get_session),
-):
+) -> CVUploadResponse:
 
     # Validate file type
     if file.content_type != "application/pdf":

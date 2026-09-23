@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_session
 from app.db.models import Job
+from app.schemas import JobCreateResponse, JobSummary
 from app.services.job_service import create_job
 from app.services.job_parser import parse_job_description
 
@@ -20,7 +21,7 @@ class JobCreate(BaseModel):
 @router.get("")
 def list_jobs(
     session: Session = Depends(get_session),
-):
+) -> list[JobSummary]:
     jobs = session.query(Job).order_by(Job.created_at.desc()).all()
 
     return [
@@ -41,7 +42,7 @@ def list_jobs(
 def create_job_endpoint(
     data: JobCreate,
     session: Session = Depends(get_session),
-):
+) -> JobCreateResponse:
     job_id = str(uuid4())
 
     requirements = parse_job_description(data.description)

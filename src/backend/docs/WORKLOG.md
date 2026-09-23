@@ -43,11 +43,18 @@ The worklog tracks meaningful backend milestones rather than individual commits 
 - **Evidence:** `7` focused endpoint tests pass; the API surface is documented in `README.md`.
 - **Next checkpoint:** Add pagination/filtering only when the application workflow requires it, then address the SQLAlchemy datetime deprecation.
 
+## 2026-09-23 - API Contract Hardening
+
+- **Scope:** Typed response schemas, timezone-aware UTC timestamps, empty collection behavior, and missing-record behavior.
+- **Outcome:** Read and matching endpoints have explicit response contracts, timestamp deprecation warnings are removed, and the full suite has `17` passing tests.
+- **Evidence:** `uv run pytest -q`.
+- **Next checkpoint:** Validate the contracts from the application client and add pagination/filtering only when required.
+
 ## Current Checkpoint
 
 - **Branch:** `feat/api`
-- **Status:** Core API, persistence, parsing, matching, scoring, read endpoints, and automated behavior coverage are implemented.
-- **Next milestone:** Define application-facing pagination/filtering needs and remove the SQLAlchemy datetime deprecation.
+- **Status:** Core API, persistence, parsing, matching, scoring, typed read endpoints, and automated behavior coverage are implemented.
+- **Next milestone:** Validate the API contracts from the application client and define pagination/filtering needs.
 
 ## Milestone Entry Template
 

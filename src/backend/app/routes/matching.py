@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_session
 from app.db.models import CV, Job
+from app.schemas import MatchingResponse
 from app.services.matching_service import match_candidate
 from app.services.scoring_service import calculate_score
 
@@ -14,7 +15,7 @@ def match_cv_to_job(
     job_id: str,
     cv_id: str,
     session: Session = Depends(get_session),
-):
+) -> MatchingResponse:
     job = session.get(Job, job_id)
     if not job:
         raise HTTPException(

@@ -67,6 +67,13 @@ def test_list_jobs_returns_created_jobs(client):
     assert response.json()[0]["title"] == "Backend Engineer"
 
 
+def test_list_jobs_returns_empty_list_when_no_jobs_exist(client):
+    response = client.get("/jobs")
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
 def test_list_cvs_returns_processed_cv_summaries(client, test_session_factory):
     from app.db.models import CV
 
@@ -91,3 +98,10 @@ def test_list_cvs_returns_processed_cv_summaries(client, test_session_factory):
     assert response.json()[0]["id"] == "cv-1"
     assert response.json()[0]["filename"] == "candidate.pdf"
     assert response.json()[0]["status"] == "processed"
+
+
+def test_list_cvs_returns_empty_list_when_no_cvs_exist(client):
+    response = client.get("/cvs")
+
+    assert response.status_code == 200
+    assert response.json() == []
