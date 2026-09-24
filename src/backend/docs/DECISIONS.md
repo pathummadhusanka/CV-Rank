@@ -1,9 +1,3 @@
----
-noteId: "28034450b77711f1b7d36fb7948e8c50"
-tags: []
-
----
-
 # Backend Decisions
 
 Only record decisions that materially affect backend architecture, data behavior, delivery workflow, or future change cost. Routine implementation choices belong in code and commits.
@@ -24,13 +18,29 @@ Only record decisions that materially affect backend architecture, data behavior
 - **Reason:** It keeps local development simple and already supports the CV and job data models.
 - **Impact:** The path is relative to the backend working directory. A future deployment should use an application-rooted or deployment-provided path to avoid creating a different database from another working directory.
 
-## Application-Owned Rule-Based Scoring
+## Application-Owned Score Aggregation
 
 - **Date:** 2026-09-23
+- **Status:** Superseded by Hosted LLM for Semantic Assessment
+- **Decision:** Keep weighted score aggregation and ranking in application code.
+- **Reason:** Deterministic aggregation makes results reproducible, testable, and explainable while allowing AI to provide the semantic requirement assessments required by the assignment.
+- **Impact:** Score weights and classification mapping remain code-owned, but match values must come from validated AI output.
+
+## Hosted LLM for Semantic Assessment
+
+- **Date:** 2026-09-24
+- **Status:** Superseded by Hybrid Semantic Matching
+- **Decision:** Use OpenRouter as the hosted, OpenAI-compatible LLM API for job requirement extraction, CV understanding, ambiguous semantic reasoning, and evidence generation. Start with `openai/gpt-4o-mini`; keep the model configurable.
+- **Reason:** The LLM is useful for language understanding and structured extraction, but it should not be the only semantic matching mechanism.
+- **Impact:** LLM outputs must be validated before scoring, and provider failures must produce controlled API errors. Keyword-only matching is not an acceptable fallback for successful analysis.
+
+## Hybrid Semantic Matching
+
+- **Date:** 2026-09-24
 - **Status:** Accepted
-- **Decision:** Keep the final candidate score and ranking in application code rather than delegating the numeric result to an AI model.
-- **Reason:** Deterministic scoring makes results reproducible, testable, and explainable. AI or parsers may provide structured evidence, but application code owns the calculation.
-- **Impact:** Changes to score weights or match values require code and focused tests. See the scoring requirements in `SPEC.md`.
+- **Decision:** Use a local Hugging Face Sentence Transformers model for semantic similarity between job requirements and meaningful CV sections, use the OpenRouter LLM for extraction and ambiguous reasoning, and use deterministic Python code for the final weighted score and ranking.
+- **Reason:** This demonstrates a genuine ML matching component while keeping the final score reproducible, explainable, configurable, and testable.
+- **Impact:** MVP embeddings are calculated in memory per analysis using `sentence-transformers/all-MiniLM-L6-v2`; no vector database, model training, or fine-tuning is required. Score weights are required skills 40%, preferred skills 15%, experience 25%, and semantic similarity 20%.
 
 ## Isolated Database for Automated Tests
 

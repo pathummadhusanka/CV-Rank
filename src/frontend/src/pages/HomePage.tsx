@@ -1,19 +1,19 @@
-import { useState, useEffect } from "react";
-import { useSearchParams, NavLink } from "react-router";
+import { useEffect, useState } from "react";
+import { NavLink, useSearchParams } from "react-router";
+import { CandidateEvidenceModal } from "@/components/CandidateEvidenceModal";
+import { CandidateLeaderboard } from "@/components/CandidateLeaderboard";
+import { CVUploader, type UploadedCandidate } from "@/components/CVUploader";
 import { JobCreator } from "@/components/JobCreator";
 import { JobRequirementsCard } from "@/components/JobRequirementsCard";
-import { CVUploader, type UploadedCandidate } from "@/components/CVUploader";
-import { CandidateLeaderboard } from "@/components/CandidateLeaderboard";
-import { CandidateEvidenceModal } from "@/components/CandidateEvidenceModal";
+import { Button } from "@/components/ui/button";
 import { evaluateCandidatesLive } from "@/lib/rankingEngine";
 import {
 	getStoredJobs,
+	getStoredProjectById,
 	saveStoredJob,
 	saveStoredProject,
-	getStoredProjectById,
 	type EvaluationProject,
 } from "@/lib/storage";
-import { Button } from "@/components/ui/button";
 import type { CreateJobResponse } from "@/lib/api";
 import type { RankedCandidate } from "@/types/ranking";
 
@@ -22,6 +22,7 @@ export default function HomePage() {
 	const [storedJobs, setStoredJobs] = useState<CreateJobResponse[]>(() => getStoredJobs());
 	const [activeJob, setActiveJob] = useState<CreateJobResponse | null>(null);
 	const [showNewJobForm, setShowNewJobForm] = useState(false);
+	const [analysisError, setAnalysisError] = useState<string | null>(null);
 	const [candidates, setCandidates] = useState<UploadedCandidate[]>([]);
 	const [rankedResults, setRankedResults] = useState<RankedCandidate[]>([]);
 	const [selectedCandidate, setSelectedCandidate] = useState<RankedCandidate | null>(null);
@@ -29,7 +30,6 @@ export default function HomePage() {
 	const [savedProjectName, setSavedProjectName] = useState("");
 	const [isProjectSaved, setIsProjectSaved] = useState(false);
 
-	// Load job or saved project from query parameter if present
 	useEffect(() => {
 		const projectId = searchParams.get("projectId");
 		if (projectId) {
@@ -46,15 +46,12 @@ export default function HomePage() {
 
 		const jobId = searchParams.get("jobId");
 		if (jobId) {
-			const found = storedJobs.find((j) => j.id === jobId);
-			if (found) {
-				setActiveJob(found);
-			}
+			const found = storedJobs.find((job) => job.id === jobId);
+			if (found) setActiveJob(found);
 		} else if (!activeJob && storedJobs.length > 0) {
-			// Pre-select first position by default
 			setActiveJob(storedJobs[0]);
 		}
-	}, [searchParams, storedJobs]);
+	}, [searchParams, storedJobs, activeJob]);
 
 	const handleSelectJob = (job: CreateJobResponse) => {
 		setActiveJob(job);
@@ -62,26 +59,36 @@ export default function HomePage() {
 		setShowNewJobForm(false);
 		setCandidates([]);
 		setRankedResults([]);
+		setAnalysisError(null);
 		setIsProjectSaved(false);
 	};
 
 	const handleJobCreated = (newJob: CreateJobResponse) => {
-		const updated = saveStoredJob(newJob);
-		setStoredJobs(updated);
+		setStoredJobs(saveStoredJob(newJob));
 		setActiveJob(newJob);
 		setSearchParams({ jobId: newJob.id });
 		setShowNewJobForm(false);
+		setAnalysisError(null);
 		setIsProjectSaved(false);
 	};
 
 	const handleRunEvaluation = async () => {
 		if (!activeJob || candidates.length === 0) return;
+
 		setIsAnalyzing(true);
+		setAnalysisError(null);
 		setIsProjectSaved(false);
 		try {
-			const results = await evaluateCandidatesLive(activeJob, candidates);
+			const results = await evaluateCandidatesLive(activeJob.id, candidates);
 			setRankedResults(results);
 			setSavedProjectName(`${activeJob.title} - Batch ${new Date().toLocaleDateString()}`);
+		} catch (error) {
+			setRankedResults([]);
+			setAnalysisError(
+				error instanceof Error
+					? error.message
+					: "AI analysis failed. Check the backend and OpenRouter configuration.",
+			);
 		} finally {
 			setIsAnalyzing(false);
 		}
@@ -105,8 +112,9 @@ export default function HomePage() {
 
 	const handleCandidatesChange = (updated: UploadedCandidate[]) => {
 		setCandidates(updated);
-		// Reset ranking if candidate list changes
 		setRankedResults([]);
+		setAnalysisError(null);
+		setIsProjectSaved(false);
 	};
 
 	const handleResetJob = () => {
@@ -115,48 +123,43 @@ export default function HomePage() {
 		setCandidates([]);
 		setRankedResults([]);
 		setSelectedCandidate(null);
+		setAnalysisError(null);
 	};
 
 	return (
 		<div className="space-y-6">
-			{/* Page Header */}
-			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+			<div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
 				<div className="space-y-1">
 					<h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
 						Candidate Evaluation Workspace
 					</h1>
 					<p className="text-sm text-muted-foreground">
-						Select a target role, ingest candidate CVs, and generate deterministic rankings.
+						Select a target role, upload candidate CVs, and generate an AI-assisted ranking.
 					</p>
 				</div>
-
-				<div className="flex items-center gap-2">
-					<NavLink to="/jobs">
-						<Button variant="outline" size="sm">
-							View Jobs Library ({storedJobs.length})
-						</Button>
-					</NavLink>
-				</div>
+				<NavLink to="/jobs">
+					<Button variant="outline" size="sm">
+						View Jobs Library ({storedJobs.length})
+					</Button>
+				</NavLink>
 			</div>
 
-			{/* Step 1: Position Selection or Creation */}
+			{analysisError && (
+				<section className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-4 text-sm text-rose-700 dark:text-rose-300">
+					<strong>Analysis unavailable:</strong> {analysisError}
+				</section>
+			)}
+
 			<section>
 				{!activeJob ? (
 					<div className="space-y-4">
-						<div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-4">
+						<div className="space-y-4 rounded-xl border border-border bg-card p-6 shadow-xs">
 							<div className="flex items-center justify-between border-b border-border/60 pb-3">
-								<h3 className="text-base font-bold text-foreground">
-									Step 1: Choose Target Job Role
-								</h3>
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={() => setShowNewJobForm(!showNewJobForm)}
-								>
+								<h3 className="text-base font-bold text-foreground">Step 1: Choose Target Job Role</h3>
+								<Button variant="outline" size="sm" onClick={() => setShowNewJobForm(!showNewJobForm)}>
 									{showNewJobForm ? "Pick From Library" : "+ Define New Job"}
 								</Button>
 							</div>
-
 							{showNewJobForm ? (
 								<JobCreator onJobCreated={handleJobCreated} />
 							) : (
@@ -164,31 +167,21 @@ export default function HomePage() {
 									<p className="text-xs text-muted-foreground">
 										Select a position from your jobs library to evaluate candidate resumes against:
 									</p>
-									<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+									<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 										{storedJobs.map((job) => (
 											<button
 												key={job.id}
 												type="button"
 												onClick={() => handleSelectJob(job)}
-												className="p-4 rounded-lg border border-border/80 bg-background text-left hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer space-y-1.5"
+												className="cursor-pointer space-y-1.5 rounded-lg border border-border/80 bg-background p-4 text-left transition-all hover:border-primary/50 hover:bg-muted/30"
 											>
-												<div className="font-bold text-sm text-foreground">
-													{job.title}
-												</div>
+												<div className="text-sm font-bold text-foreground">{job.title}</div>
 												<div className="flex flex-wrap gap-1">
-													{job.requirements.skills.slice(0, 4).map((s) => (
-														<span
-															key={s}
-															className="text-[10px] bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded capitalize"
-														>
-															{s}
+													{job.requirements.skills.slice(0, 4).map((skill) => (
+														<span key={skill} className="rounded bg-secondary px-1.5 py-0.5 text-[10px] capitalize text-secondary-foreground">
+															{skill}
 														</span>
 													))}
-													{job.requirements.skills.length > 4 && (
-														<span className="text-[10px] text-muted-foreground self-center">
-															+{job.requirements.skills.length - 4} more
-														</span>
-													)}
 												</div>
 											</button>
 										))}
@@ -198,80 +191,52 @@ export default function HomePage() {
 						</div>
 					</div>
 				) : (
-					<div className="space-y-3">
-						<JobRequirementsCard
-							job={activeJob}
-							onReset={handleResetJob}
-						/>
-					</div>
+					<JobRequirementsCard job={activeJob} onReset={handleResetJob} />
 				)}
 			</section>
 
-			{/* Step 2: Upload Candidate CVs */}
 			<section>
-				<CVUploader
-					onCandidatesChange={handleCandidatesChange}
-					disabled={!activeJob}
-				/>
+				<CVUploader onCandidatesChange={handleCandidatesChange} disabled={!activeJob} />
 			</section>
 
-			{/* Step 3: Run Evaluation Trigger (when candidates uploaded but not evaluated yet) */}
 			{activeJob && candidates.length > 0 && rankedResults.length === 0 && (
-				<section className="rounded-xl border border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+				<section className="flex flex-col justify-between gap-4 rounded-xl border border-primary/30 bg-primary/5 p-5 sm:flex-row sm:items-center">
 					<div className="space-y-1">
 						<div className="flex items-center gap-2">
-							<span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-							<span className="text-xs font-bold text-foreground uppercase tracking-wider">
-								Ready for Ranking
-							</span>
+							<span className="size-2 animate-pulse rounded-full bg-emerald-500" />
+							<span className="text-xs font-bold uppercase tracking-wider text-foreground">Ready for AI Analysis</span>
 						</div>
 						<p className="text-xs text-muted-foreground">
-							{candidates.length} candidate CV{candidates.length === 1 ? "" : "s"} ready to match against &ldquo;{activeJob.title}&rdquo;.
+							{candidates.length} candidate CV{candidates.length === 1 ? "" : "s"} ready for {activeJob.title}.
 						</p>
 					</div>
-
-					<Button
-						size="lg"
-						onClick={handleRunEvaluation}
-						disabled={isAnalyzing}
-					>
-						{isAnalyzing ? "Computing Fit Scores..." : "Run Candidate Ranking"}
+					<Button size="lg" onClick={handleRunEvaluation} disabled={isAnalyzing}>
+						{isAnalyzing ? "Analyzing with AI..." : "Run AI Candidate Analysis"}
 					</Button>
 				</section>
 			)}
 
-			{/* Step 3: Leaderboard (when evaluation has been computed) */}
 			{rankedResults.length > 0 && (
 				<section className="space-y-4">
-					{/* Project Save Bar */}
-					<div className="rounded-xl border border-border bg-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-						<div className="flex items-center gap-3 flex-1 min-w-0">
-							<span className="text-xs font-semibold text-foreground uppercase tracking-wider shrink-0">
-								Project Name:
-							</span>
+					<div className="flex flex-col justify-between gap-3 rounded-xl border border-border bg-card p-4 shadow-xs sm:flex-row sm:items-center">
+						<div className="flex min-w-0 flex-1 items-center gap-3">
+							<span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-foreground">Project Name:</span>
 							<input
 								type="text"
 								value={savedProjectName}
-								onChange={(e) => {
-									setSavedProjectName(e.target.value);
+								onChange={(event) => {
+									setSavedProjectName(event.target.value);
 									setIsProjectSaved(false);
 								}}
 								placeholder="e.g. Python Backend - Round 1"
 								className="w-full max-w-sm rounded-md border border-input bg-background px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
 							/>
 						</div>
-
-						<div className="flex items-center gap-2 shrink-0">
-							{isProjectSaved ? (
-								<span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">
-									✓ Saved to Projects History
-								</span>
-							) : (
-								<Button size="sm" onClick={handleSaveProject}>
-									Save Evaluation Project
-								</Button>
-							)}
-						</div>
+						{isProjectSaved ? (
+							<span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">Saved to Projects History</span>
+						) : (
+							<Button size="sm" onClick={handleSaveProject}>Save Evaluation Project</Button>
+						)}
 					</div>
 
 					<CandidateLeaderboard
@@ -283,14 +248,7 @@ export default function HomePage() {
 				</section>
 			)}
 
-			{/* Candidate Evidence Modal */}
-			<CandidateEvidenceModal
-				candidate={selectedCandidate}
-				onClose={() => setSelectedCandidate(null)}
-			/>
+			<CandidateEvidenceModal candidate={selectedCandidate} onClose={() => setSelectedCandidate(null)} />
 		</div>
 	);
 }
-
-
-

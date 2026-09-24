@@ -9,6 +9,7 @@
 * `POST /cvs` - Upload CV in PDF format
 * `POST /matching/jobs/{job_id}/cvs/{cv_id}` - Match a CV against a job
 * `POST /matching/jobs/{job_id}` - Rank all stored CVs against a job
+* `POST /analysis/jobs/{job_id}` - Analyze and rank CVs with the configured AI provider
 * Swagger UI: `http://127.0.0.1:8000/docs`
 
 ## Configurations
@@ -20,6 +21,13 @@ Optional variables:
 
 - Change DB Server URL (Default is set to SQLite: sqlite:///storage/cv_rank.db).  
 `DATABASE_URL`=sqlite:///storage/cv_rank.db
+
+- Configure the AI provider at runtime. The selected provider is OpenRouter.
+- `AI_PROVIDER`=openrouter
+- `AI_MODEL`=openai/gpt-4o-mini
+- `AI_EMBEDDING_MODEL`=sentence-transformers/all-MiniLM-L6-v2
+- `AI_API_KEY`=your-openrouter-key
+- `AI_BASE_URL`=https://openrouter.ai/api/v1
 
 ### Run
 

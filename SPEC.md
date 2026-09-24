@@ -37,7 +37,7 @@ The user can:
 * PDF CV processing
 * AI-based requirement extraction
 * AI-based semantic CV matching
-* Weighted candidate scoring
+* Hybrid AI matching using LLM extraction, embeddings, and deterministic aggregation
 * Candidate ranking
 * Score breakdown
 * Evidence and explanation
@@ -96,14 +96,14 @@ The system should focus on requirements that are relevant to the role.
 
 AI evaluates each candidate against the extracted requirements.
 
-Each requirement receives one classification:
+Each requirement receives one AI-generated classification:
 
 * Strong match
 * Partial match
 * No evidence
 * Contradictory evidence
 
-The AI must provide supporting evidence where available.
+The AI must provide supporting evidence where available and must not rely on exact keyword overlap alone.
 
 The system must not invent qualifications or experience.
 
@@ -111,24 +111,36 @@ Missing information is treated as no evidence, not proof that the candidate lack
 
 ## 8. Scoring
 
-The Fit Score is a value from 0 to 100.
+The Fit Score is a value from 0 to 100 and must use AI-generated requirement assessments.
 
 The score represents how well the available evidence in the CV matches the requirements of the job.
 
-Match values:
+The application maps the validated AI classifications to numeric match values:
 
 * Strong match: 1.0
 * Partial match: 0.5
 * No evidence: 0.0
 * Contradictory evidence: 0.0
 
-The score is calculated by application code using the requirement weights.
+The MVP uses these score components:
+
+* Required skill match: 40%
+* Preferred skill match: 15%
+* Experience match: 25%
+* Semantic similarity: 20%
+
+The score is calculated by application code using validated AI outputs and embedding similarities.
 
 ```text
-score = sum(weight × match value) / sum(weights) × 100
+score = (
+	required_skill_score × 0.40
+	+ preferred_skill_score × 0.15
+	+ experience_score × 0.25
+	+ semantic_similarity_score × 0.20
+)
 ```
 
-The AI does not directly determine the final score.
+The LLM determines structured requirements, candidate information, ambiguous semantic relationships, and evidence. Embeddings provide semantic similarity between requirements and relevant CV sections. Application code validates those results, performs the weighted aggregation, and owns the final ranking. No model is asked to invent or directly return the final aggregate score.
 
 ## 9. Ranking
 
@@ -146,6 +158,10 @@ AI is responsible for:
 * Semantic matching
 * Match classification
 * Evidence and explanations
+
+The first implementation uses a hosted, structured-output-capable language model for extraction and ambiguous reasoning, plus an embedding model for semantic similarity. Model and provider configuration are supplied through environment variables. Embeddings are calculated in memory for the MVP; no vector database, model training, or fine-tuning is required.
+
+The system must compare meaningful CV sections or chunks against relevant job requirements rather than embedding an entire CV as one undifferentiated document.
 
 Application code is responsible for:
 
@@ -168,6 +184,9 @@ The system should handle:
 * CV extraction failures
 * AI/API failures
 * Invalid AI responses
+* Embedding API failures
+* Missing AI API keys
+* AI timeouts, rate limits, and provider failures
 
 Errors should be shown as clear user-facing messages. Internal errors and stack traces should not be exposed.
 
@@ -179,7 +198,7 @@ Errors should be shown as clear user-facing messages. Internal errors and stack 
 * The job description contains enough information to identify requirements.
 * CVs contain enough readable information for evaluation.
 * Missing information is treated as no evidence.
-* AI results may be incorrect and require human review.
+* AI results may be incorrect, incomplete, or unavailable and require human review.
 * The hiring team makes the final decision.
 
 ## 13. Security and Privacy

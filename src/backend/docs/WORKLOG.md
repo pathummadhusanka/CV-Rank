@@ -64,11 +64,53 @@ The worklog tracks meaningful backend milestones rather than individual commits 
 - **Evidence:** `uv run pytest -q` passes with `20` tests. Image build is pending because the local Docker Desktop Linux engine is not running.
 - **Next checkpoint:** Build and smoke-test the image after Docker Desktop is started.
 
+## 2026-09-24 - AI Architecture Decision
+
+- **Scope:** Align the implementation plan with the assignment requirement for AI-based scoring and semantic matching.
+- **Outcome:** The MVP will use a hosted structured-output LLM for requirement extraction, CV understanding, matching classifications, and evidence. Python will validate AI results, aggregate the weighted score, and rank candidates. No training or embeddings are planned for the first version.
+- **Evidence:** Updated [SPEC.md](../../../SPEC.md) and [DECISIONS.md](DECISIONS.md#hosted-llm-for-semantic-assessment).
+- **Next checkpoint:** Implement the provider interface, validated AI schemas, mock provider, and runtime configuration on `feat/ai`.
+
+## 2026-09-24 - AI Contract and Mock Provider Milestone
+
+- **Scope:** AI requirement and candidate-assessment schemas, provider protocol, mock provider, runtime settings, and prompt record.
+- **Outcome:** AI outputs have validated classifications, evidence fields, and bounded requirement weights. Local tests use the mock provider and do not require an API key.
+- **Evidence:** `uv run pytest tests/test_ai.py -q` passes with `4` tests.
+- **Next checkpoint:** Implement the hosted provider adapter and integrate validated AI assessments into job analysis and ranking.
+
+## 2026-09-24 - OpenRouter Provider Selection
+
+- **Scope:** Select the hosted LLM API for the first real provider adapter.
+- **Outcome:** OpenRouter is selected with `openai/gpt-4o-mini` as the initial configurable model. API keys remain runtime-only; local tests continue using the mock provider.
+- **Evidence:** `uv run pytest tests/test_ai.py -q` passes with `5` tests.
+- **Next checkpoint:** Implement the OpenRouter adapter with structured response validation and controlled provider failures.
+
+## 2026-09-24 - OpenRouter and Embedding Adapter Milestone
+
+- **Scope:** OpenRouter-compatible LLM adapter, local Sentence Transformers embeddings, controlled provider errors, and cosine similarity utility.
+- **Outcome:** Structured job extraction, candidate assessment, local embedding calls, missing-key handling, malformed-response handling, and vector comparison are covered without network calls.
+- **Evidence:** `uv run pytest tests/test_ai.py tests/test_openrouter_provider.py -q` passes with `9` tests.
+- **Next checkpoint:** Build the AI analysis service that combines requirements, CV chunks, embeddings, LLM assessments, and deterministic scoring.
+
+## 2026-09-24 - Hybrid AI Analysis Milestone
+
+- **Scope:** AI analysis service, CV chunking, requirement-to-CV embedding similarity, weighted component scoring, deterministic ranking, analysis API, and controlled provider failures.
+- **Outcome:** `POST /analysis/jobs/{job_id}` now runs the validated hybrid pipeline with mock or OpenRouter providers and never presents a provider failure as a successful result.
+- **Evidence:** Full backend suite passes with `37` tests.
+- **Next checkpoint:** Replace the frontend keyword fallback with this analysis endpoint and add the root frontend/backend Compose workflow.
+
 ## Current Checkpoint
 
-- **Branch:** `feat/api`
-- **Status:** Core API, persistence, parsing, matching, scoring, typed read endpoints, ranking, automated behavior coverage, and Docker configuration are implemented.
-- **Next milestone:** Add batch CV upload with per-file results.
+- **Branch:** `feat/ai`
+- **Status:** Core API, persistence, parsing, matching, hybrid AI analysis, typed read endpoints, ranking, frontend integration, and Docker configuration are implemented.
+- **Next milestone:** Complete the real-container smoke run with an OpenRouter key and update any runtime issues found there.
+
+## 2026-09-24 - MVP Compliance Hardening
+
+- **Scope:** Single-container runtime, root secret ignore rules, controlled local embedding-model startup errors, and documentation checkpoint accuracy.
+- **Outcome:** The root `Dockerfile` serves the frontend and backend together, root Compose runs one container, runtime `.env` files are ignored, and model-load failures are represented as controlled AI provider failures.
+- **Evidence:** Root Compose configuration renders successfully; full container smoke test remains dependent on Docker Desktop and a runtime OpenRouter key.
+- **Next checkpoint:** Build with `docker build` and run with `docker run` as required by the assignment.
 
 ## Milestone Entry Template
 

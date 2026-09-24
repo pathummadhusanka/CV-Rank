@@ -1,0 +1,12 @@
+.git/
+.env
+.env.*
+!.env.example
+src/backend/.venv/
+src/backend/storage/
+src/frontend/node_modules/
+__pycache__/
+.pytest_cache/
+*.db
+*.sqlite
+*.sqlite3

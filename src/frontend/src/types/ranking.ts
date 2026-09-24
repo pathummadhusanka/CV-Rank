@@ -18,6 +18,12 @@ export interface RankedCandidate {
 	fitScore: number;
 	matchDetails?: CandidateMatchDetails;
 	scores?: CandidateMatchScores;
+	scoreBreakdown?: {
+		requiredSkills: number;
+		preferredSkills: number;
+		experience: number;
+		semanticSimilarity: number;
+	};
 	matches: RequirementMatch[];
 	strengths: string[];
 	gaps: string[];
