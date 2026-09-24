@@ -84,20 +84,28 @@ def check_openrouter_health(provider_settings: Settings = settings) -> dict[str,
 
     data = payload.get("data", {}) if isinstance(payload, dict) else {}
     limit_remaining = data.get("limit_remaining") if isinstance(data, dict) else None
+    metadata = {
+        "key_label": data.get("label") if isinstance(data, dict) else None,
+        "usage": data.get("usage") if isinstance(data, dict) else None,
+        "limit": data.get("limit") if isinstance(data, dict) else None,
+        "is_active": data.get("is_active") if isinstance(data, dict) else None,
+        "limit_reset": data.get("limit_reset") if isinstance(data, dict) else None,
+        "limit_remaining": limit_remaining,
+    }
     if isinstance(limit_remaining, (int, float)) and limit_remaining <= 0:
         return {
             "provider": provider_settings.ai_provider,
             "model": provider_settings.ai_model,
             "status": "credits_exhausted",
             "message": "OpenRouter credits or the configured key limit have been exhausted.",
-            "limit_remaining": limit_remaining,
+            **metadata,
         }
     return {
         "provider": provider_settings.ai_provider,
         "model": provider_settings.ai_model,
         "status": "ready",
         "message": "AI analysis is ready.",
-        "limit_remaining": limit_remaining,
+        **metadata,
     }
 
 

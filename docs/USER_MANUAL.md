@@ -7,8 +7,7 @@ CV-Rank is for hiring managers and recruiters who want to compare several candid
 ## Before You Start
 
 The application must be running at `http://localhost:3000`. Ask the technical owner to configure the OpenRouter API key before running an AI analysis.
-The application shows a system status message below the navigation bar. It checks the backend and OpenRouter configuration and explains common problems in plain language. Resolve any warning before running an evaluation.
-If an invalid OpenRouter API key is provided, the application will clearly classify this as an error and prompt the user to correct it.
+The **System status** control in the navbar checks the backend and OpenRouter configuration and explains common problems in plain language. Resolve any warning before running an evaluation. Open **Developer Options** for detailed OpenRouter key validity, activity, usage, limit, and reset information. The secret key value is never displayed in the application.
 
 Use synthetic or anonymized CVs during evaluation. Do not upload sensitive documents unless your organization has approved the configured AI provider.
 

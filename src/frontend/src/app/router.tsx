@@ -6,6 +6,7 @@ import HomePage from "../pages/HomePage";
 import JobsPage from "../pages/JobsPage";
 import CVLibraryPage from "../pages/CVLibraryPage";
 import NotFoundPage from "../pages/NotFoundPage";
+import DeveloperOptionsPage from "../pages/DeveloperOptionsPage";
 
 export const router = createBrowserRouter([
 	{
@@ -27,6 +28,10 @@ export const router = createBrowserRouter([
 			{
 				path: "dashboard",
 				Component: DashboardPage,
+			},
+			{
+				path: "developer-options",
+				Component: DeveloperOptionsPage,
 			},
 			{
 				path: "*",

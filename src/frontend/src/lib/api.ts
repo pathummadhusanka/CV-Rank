@@ -19,6 +19,11 @@ export interface AIHealthResponse {
 	model: string;
 	status: AIHealthStatus;
 	message: string;
+	key_label?: string | null;
+	usage?: number | null;
+	limit?: number | null;
+	is_active?: boolean | null;
+	limit_reset?: string | null;
 	limit_remaining?: number | null;
 }
 
