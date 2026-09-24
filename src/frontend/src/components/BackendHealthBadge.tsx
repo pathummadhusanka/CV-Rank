@@ -3,7 +3,7 @@ import { useSystemStatus } from "@/components/SystemStatusContext";
 
 export function BackendHealthBadge() {
 	const [isOpen, setIsOpen] = useState(false);
-	const { health, aiHealth, backendStatus, lastChecked, isStarting, isChecking, checkHealth } = useSystemStatus();
+	const { health, aiHealth, backendStatus, lastChecked, isStarting, hasInitialCheckCompleted, isChecking, checkHealth } = useSystemStatus();
 
 	const isBackendChecking = backendStatus === "checking";
 	const hasBackendIssue = backendStatus === "offline";
@@ -16,6 +16,7 @@ export function BackendHealthBadge() {
 	].includes(aiHealth.status);
 	const hasAITemporaryIssue = aiHealth?.status && ["rate_limited", "provider_unavailable"].includes(aiHealth.status);
 	const hasAIHealthFailure = backendStatus === "online" && aiHealth === null;
+	const isSettingUp = isStarting && !hasInitialCheckCompleted;
 	const overallStatus = isStarting || isChecking || isBackendChecking ? "checking" : hasAITemporaryIssue || hasAIHealthFailure ? "warning" : hasBackendIssue || hasAIConfigurationIssue ? "error" : "ready";
 	const statusColor = {
 		ready: "bg-emerald-500",
@@ -25,7 +26,7 @@ export function BackendHealthBadge() {
 	}[overallStatus];
 	const statusLabel = {
 		ready: "System ready",
-		checking: isStarting ? "System is setting up" : "Checking system",
+		checking: isSettingUp ? "System is setting up" : "Checking system",
 		warning: "System warning",
 		error: "System issue",
 	}[overallStatus];

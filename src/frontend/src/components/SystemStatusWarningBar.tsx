@@ -6,13 +6,14 @@ type StatusItem = {
 };
 
 export function SystemStatusWarningBar() {
-	const { health, aiHealth, checked, isStarting, isChecking, checkHealth } = useSystemStatus();
+	const { health, aiHealth, checked, isStarting, hasInitialCheckCompleted, isChecking, checkHealth } = useSystemStatus();
+	const isSettingUp = isStarting && !hasInitialCheckCompleted;
 
-	if (isStarting || isChecking) {
+	if (isSettingUp || isStarting || isChecking) {
 		return (
 			<div className="border-b border-border bg-muted/40 px-4 py-2 text-xs text-muted-foreground" role="status">
 				<div className="mx-auto flex max-w-7xl items-center justify-center gap-3 text-center">
-					<p><strong className="text-foreground">{isStarting ? "System is setting up." : "Checking system services."}</strong> Please wait a moment...</p>
+					<p><strong className="text-foreground">{isSettingUp ? "System is setting up." : "Checking system services."}</strong> Please wait a moment...</p>
 				</div>
 			</div>
 		);

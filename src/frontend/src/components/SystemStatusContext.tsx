@@ -18,6 +18,7 @@ type SystemStatusContextValue = {
 	lastChecked: Date | null;
 	checked: boolean;
 	isStarting: boolean;
+	hasInitialCheckCompleted: boolean;
 	isChecking: boolean;
 	checkHealth: () => Promise<void>;
 };
@@ -30,6 +31,7 @@ export function SystemStatusProvider({ children }: { children: ReactNode }) {
 	const [backendStatus, setBackendStatus] = useState<BackendStatus>("checking");
 	const [lastChecked, setLastChecked] = useState<Date | null>(null);
 	const [isStarting, setIsStarting] = useState(true);
+	const [hasInitialCheckCompleted, setHasInitialCheckCompleted] = useState(false);
 	const [isChecking, setIsChecking] = useState(false);
 
 	const checkHealth = async () => {
@@ -48,6 +50,7 @@ export function SystemStatusProvider({ children }: { children: ReactNode }) {
 			setLastChecked(new Date());
 		} finally {
 			setIsChecking(false);
+			setHasInitialCheckCompleted(true);
 		}
 	};
 
@@ -63,7 +66,7 @@ export function SystemStatusProvider({ children }: { children: ReactNode }) {
 
 	return (
 		<SystemStatusContext.Provider
-			value={{ health, aiHealth, backendStatus, lastChecked, checked: lastChecked !== null, isStarting, isChecking, checkHealth }}
+			value={{ health, aiHealth, backendStatus, lastChecked, checked: lastChecked !== null, isStarting, hasInitialCheckCompleted, isChecking, checkHealth }}
 		>
 			{children}
 		</SystemStatusContext.Provider>
