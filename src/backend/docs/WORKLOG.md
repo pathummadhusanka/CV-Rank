@@ -85,6 +85,13 @@ The worklog tracks meaningful backend milestones rather than individual commits 
 - **Evidence:** `uv run pytest tests/test_ai.py -q` passes with `5` tests.
 - **Next checkpoint:** Implement the OpenRouter adapter with structured response validation and controlled provider failures.
 
+## 2026-09-24 - OpenRouter and Embedding Adapter Milestone
+
+- **Scope:** OpenRouter-compatible LLM adapter, embedding requests, controlled provider errors, and cosine similarity utility.
+- **Outcome:** Structured job extraction, candidate assessment, embedding calls, missing-key handling, malformed-response handling, and vector comparison are covered without network calls.
+- **Evidence:** `uv run pytest tests/test_ai.py tests/test_openrouter_provider.py -q` passes with `9` tests.
+- **Next checkpoint:** Build the AI analysis service that combines requirements, CV chunks, embeddings, LLM assessments, and deterministic scoring.
+
 ## Current Checkpoint
 
 - **Branch:** `feat/ai`

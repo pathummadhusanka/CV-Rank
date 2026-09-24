@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///storage/cv_rank.db"
     ai_provider: str = "openrouter"
     ai_model: str = "openai/gpt-4o-mini"
+    ai_embedding_model: str = "openai/text-embedding-3-small"
     ai_api_key: SecretStr | None = None
     ai_base_url: str = "https://openrouter.ai/api/v1"
     ai_http_referer: str | None = None

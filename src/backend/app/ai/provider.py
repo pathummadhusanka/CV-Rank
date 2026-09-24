@@ -14,3 +14,6 @@ class AIProvider(Protocol):
         requirements: AIJobAnalysis,
     ) -> AICandidateAssessment:
         ...
+
+    def embed(self, texts: list[str]) -> list[list[float]]:
+        ...

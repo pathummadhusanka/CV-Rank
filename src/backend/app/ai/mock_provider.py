@@ -42,3 +42,9 @@ class MockAIProvider:
                 for requirement in requirements.requirements
             ]
         )
+
+    def embed(self, texts: list[str]) -> list[list[float]]:
+        return [
+            [float(len(text)), float(sum(text.lower().count(char) for char in "aeiou"))]
+            for text in texts
+        ]
