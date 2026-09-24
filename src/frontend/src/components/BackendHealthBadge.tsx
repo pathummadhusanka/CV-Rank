@@ -3,9 +3,9 @@ import { useSystemStatus } from "@/components/SystemStatusContext";
 
 export function BackendHealthBadge() {
 	const [isOpen, setIsOpen] = useState(false);
-	const { health, aiHealth, backendStatus, lastChecked, checkHealth } = useSystemStatus();
+	const { health, aiHealth, backendStatus, lastChecked, isStarting, isChecking, checkHealth } = useSystemStatus();
 
-	const isChecking = backendStatus === "checking";
+	const isBackendChecking = backendStatus === "checking";
 	const hasBackendIssue = backendStatus === "offline";
 	const hasAIConfigurationIssue = aiHealth?.status && [
 		"missing_api_key",
@@ -16,14 +16,16 @@ export function BackendHealthBadge() {
 	].includes(aiHealth.status);
 	const hasAITemporaryIssue = aiHealth?.status && ["rate_limited", "provider_unavailable"].includes(aiHealth.status);
 	const hasAIHealthFailure = backendStatus === "online" && aiHealth === null;
-	const overallStatus = isChecking || hasAITemporaryIssue || hasAIHealthFailure ? "warning" : hasBackendIssue || hasAIConfigurationIssue ? "error" : "ready";
+	const overallStatus = isStarting || isChecking || isBackendChecking ? "checking" : hasAITemporaryIssue || hasAIHealthFailure ? "warning" : hasBackendIssue || hasAIConfigurationIssue ? "error" : "ready";
 	const statusColor = {
 		ready: "bg-emerald-500",
+		checking: "bg-slate-400",
 		warning: "bg-amber-500",
 		error: "bg-rose-500",
 	}[overallStatus];
 	const statusLabel = {
 		ready: "System ready",
+		checking: isStarting ? "System is setting up" : "Checking system",
 		warning: "System warning",
 		error: "System issue",
 	}[overallStatus];

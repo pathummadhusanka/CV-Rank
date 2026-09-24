@@ -6,6 +6,9 @@ import {
 	type HealthResponse,
 } from "@/lib/api";
 
+const HEALTH_CHECK_INTERVAL_MS = 30000;
+const STARTUP_GRACE_PERIOD_MS = HEALTH_CHECK_INTERVAL_MS + 5000;
+
 type BackendStatus = "checking" | "online" | "offline";
 
 type SystemStatusContextValue = {
@@ -14,6 +17,8 @@ type SystemStatusContextValue = {
 	backendStatus: BackendStatus;
 	lastChecked: Date | null;
 	checked: boolean;
+	isStarting: boolean;
+	isChecking: boolean;
 	checkHealth: () => Promise<void>;
 };
 
@@ -24,29 +29,41 @@ export function SystemStatusProvider({ children }: { children: ReactNode }) {
 	const [aiHealth, setAIHealth] = useState<AIHealthResponse | null>(null);
 	const [backendStatus, setBackendStatus] = useState<BackendStatus>("checking");
 	const [lastChecked, setLastChecked] = useState<Date | null>(null);
+	const [isStarting, setIsStarting] = useState(true);
+	const [isChecking, setIsChecking] = useState(false);
 
 	const checkHealth = async () => {
-		const [backendResult, aiResult] = await Promise.allSettled([getHealth(), getAIHealth()]);
-		if (backendResult.status === "fulfilled") {
-			setHealth(backendResult.value);
-			setBackendStatus(backendResult.value.status === "ok" ? "online" : "offline");
-		} else {
-			setHealth(null);
-			setBackendStatus("offline");
+		setIsChecking(true);
+		try {
+			const [backendResult, aiResult] = await Promise.allSettled([getHealth(), getAIHealth()]);
+			if (backendResult.status === "fulfilled") {
+				setHealth(backendResult.value);
+				setBackendStatus(backendResult.value.status === "ok" ? "online" : "offline");
+				setIsStarting(false);
+			} else {
+				setHealth(null);
+				setBackendStatus("offline");
+			}
+			setAIHealth(aiResult.status === "fulfilled" ? aiResult.value : null);
+			setLastChecked(new Date());
+		} finally {
+			setIsChecking(false);
 		}
-		setAIHealth(aiResult.status === "fulfilled" ? aiResult.value : null);
-		setLastChecked(new Date());
 	};
 
 	useEffect(() => {
 		checkHealth();
-		const interval = setInterval(checkHealth, 30000);
-		return () => clearInterval(interval);
+		const interval = setInterval(checkHealth, HEALTH_CHECK_INTERVAL_MS);
+		const startupTimer = setTimeout(() => setIsStarting(false), STARTUP_GRACE_PERIOD_MS);
+		return () => {
+			clearInterval(interval);
+			clearTimeout(startupTimer);
+		};
 	}, []);
 
 	return (
 		<SystemStatusContext.Provider
-			value={{ health, aiHealth, backendStatus, lastChecked, checked: lastChecked !== null, checkHealth }}
+			value={{ health, aiHealth, backendStatus, lastChecked, checked: lastChecked !== null, isStarting, isChecking, checkHealth }}
 		>
 			{children}
 		</SystemStatusContext.Provider>
