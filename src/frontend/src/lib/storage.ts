@@ -4,6 +4,7 @@ import type { RankedCandidate } from "@/types/ranking";
 
 const JOBS_STORAGE_KEY = "cv_rank_jobs";
 const PROJECTS_STORAGE_KEY = "cv_rank_projects";
+const LEGACY_SAMPLE_JOB_ID = "sample-job-python-dev";
 
 export interface EvaluationProject {
 	id: string;
@@ -14,29 +15,16 @@ export interface EvaluationProject {
 	results: RankedCandidate[];
 }
 
-export const DEFAULT_SAMPLE_JOB: CreateJobResponse = {
-	id: "sample-job-python-dev",
-	title: "Senior Python Backend Developer",
-	status: "created",
-	requirements: {
-		skills: ["python", "fastapi", "django", "sql", "postgresql", "docker", "git", "aws"],
-		experience_years: 3,
-		education: "bachelor's degree",
-	},
-};
-
 export function getStoredJobs(): CreateJobResponse[] {
 	try {
 		const raw = localStorage.getItem(JOBS_STORAGE_KEY);
-		if (!raw) {
-			// Initialize with default sample position for easy testing
-			localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify([DEFAULT_SAMPLE_JOB]));
-			return [DEFAULT_SAMPLE_JOB];
-		}
+		if (!raw) return [];
 		const parsed = JSON.parse(raw);
-		return Array.isArray(parsed) && parsed.length > 0 ? parsed : [DEFAULT_SAMPLE_JOB];
+		return Array.isArray(parsed)
+			? parsed.filter((job) => job?.id !== LEGACY_SAMPLE_JOB_ID)
+			: [];
 	} catch {
-		return [DEFAULT_SAMPLE_JOB];
+		return [];
 	}
 }
 

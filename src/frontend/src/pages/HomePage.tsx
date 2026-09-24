@@ -27,6 +27,7 @@ export default function HomePage() {
 	const [rankedResults, setRankedResults] = useState<RankedCandidate[]>([]);
 	const [selectedCandidate, setSelectedCandidate] = useState<RankedCandidate | null>(null);
 	const [isAnalyzing, setIsAnalyzing] = useState(false);
+	const [analysisStatus, setAnalysisStatus] = useState<string | null>(null);
 	const [savedProjectName, setSavedProjectName] = useState("");
 	const [isProjectSaved, setIsProjectSaved] = useState(false);
 
@@ -76,10 +77,12 @@ export default function HomePage() {
 		if (!activeJob || candidates.length === 0) return;
 
 		setIsAnalyzing(true);
+		setAnalysisStatus("Sending candidates to the AI service...");
 		setAnalysisError(null);
 		setIsProjectSaved(false);
 		try {
 			const results = await evaluateCandidatesLive(activeJob.id, candidates);
+			setAnalysisStatus("AI analysis completed.");
 			setRankedResults(results);
 			setSavedProjectName(`${activeJob.title} - Batch ${new Date().toLocaleDateString()}`);
 		} catch (error) {
@@ -89,6 +92,7 @@ export default function HomePage() {
 					? error.message
 					: "AI analysis failed. Check the backend and OpenRouter configuration.",
 			);
+			setAnalysisStatus(null);
 		} finally {
 			setIsAnalyzing(false);
 		}
@@ -213,6 +217,9 @@ export default function HomePage() {
 					<Button size="lg" onClick={handleRunEvaluation} disabled={isAnalyzing}>
 						{isAnalyzing ? "Analyzing with AI..." : "Run AI Candidate Analysis"}
 					</Button>
+					{analysisStatus && (
+						<p className="text-xs text-muted-foreground" role="status">{analysisStatus}</p>
+					)}
 				</section>
 			)}
 

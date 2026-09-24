@@ -169,9 +169,11 @@ export async function matchCVToJob(jobId: string, cvId: string): Promise<MatchCV
 }
 
 export async function analyzeJob(jobId: string): Promise<AIAnalysisResponse> {
+	console.info(`[analysis] request started job=${jobId}`);
 	const res = await fetch(`/api/analysis/jobs/${jobId}`, {
 		method: "POST",
 	});
+	console.info(`[analysis] response received status=${res.status}`);
 	return handleResponse<AIAnalysisResponse>(res);
 }
 

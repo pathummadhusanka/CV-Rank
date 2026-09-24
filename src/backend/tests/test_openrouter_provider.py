@@ -18,6 +18,7 @@ class FakeClient:
         self.embeddings = SimpleNamespace(create=self.create_embeddings)
 
     def create_chat(self, **kwargs):
+        assert "json" in kwargs["messages"][0]["content"].lower()
         return SimpleNamespace(
             choices=[
                 SimpleNamespace(
@@ -81,6 +82,66 @@ def test_openrouter_provider_validates_chat_and_embedding_outputs():
     assert requirements.requirements[0].required is True
     assert assessment.assessments[0].evidence == ["Built Python APIs"]
     assert provider.embed(["job", "cv"]) == [[1.0, 0.0], [0.0, 1.0]]
+
+
+def test_openrouter_provider_defaults_null_requirement_weights():
+    provider = provider_with(
+        FakeClient(
+            {
+                "requirements": [
+                    {
+                        "description": "Python",
+                        "category": "skill",
+                        "required": True,
+                        "weight": None,
+                    },
+                    {
+                        "description": "Bachelor's degree",
+                        "category": "education",
+                        "required": False,
+                        "weight": None,
+                    },
+                ]
+            }
+        )
+    )
+
+    analysis = provider.extract_requirements("Python role")
+
+    assert [item.weight for item in analysis.requirements] == [0.7, 0.3]
+
+
+def test_openrouter_provider_normalizes_keyed_candidate_assessment():
+    provider = provider_with(
+        FakeClient(
+            {
+                "assessment": {
+                    "Python": {
+                        "classification": "strong_match",
+                        "evidence": ["Python experience"],
+                    }
+                }
+            }
+        )
+    )
+
+    assessment = provider.assess_candidate(
+        "Python role",
+        "Python developer",
+        AIJobAnalysis(
+            requirements=[
+                {
+                    "description": "Python",
+                    "category": "skill",
+                    "required": True,
+                    "weight": 1.0,
+                }
+            ]
+        ),
+    )
+
+    assert assessment.assessments[0].requirement == "Python"
+    assert assessment.assessments[0].classification == "strong_match"
 
 
 def test_openrouter_provider_requires_api_key_without_injected_client():

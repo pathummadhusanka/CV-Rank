@@ -1,4 +1,6 @@
 import json
+import logging
+from time import perf_counter
 from typing import Any
 
 from openai import OpenAI
@@ -8,6 +10,8 @@ from pydantic import ValidationError
 from app.ai.errors import AIConfigurationError, AIProviderError, AIResponseError
 from app.ai.schemas import AICandidateAssessment, AIJobAnalysis
 from app.core.config import Settings, settings
+
+logger = logging.getLogger("cv_rank.ai.openrouter")
 
 
 class OpenRouterProvider:
@@ -38,11 +42,24 @@ class OpenRouterProvider:
 
     def extract_requirements(self, job_description: str) -> AIJobAnalysis:
         payload = self._request_json(
+            "extract_requirements",
             "Extract job-relevant required and preferred requirements. "
             "Return JSON with a requirements array. Each item must contain "
             "description, category, required, and weight. Do not invent requirements.",
             job_description,
         )
+        repaired_weights = 0
+        requirements = payload.get("requirements", [])
+        if isinstance(requirements, list):
+            for requirement in requirements:
+                if isinstance(requirement, dict) and requirement.get("weight") is None:
+                    requirement["weight"] = 0.7 if requirement.get("required", True) else 0.3
+                    repaired_weights += 1
+        if repaired_weights:
+            logger.warning(
+                "llm requirements contained null weights; applied defaults count=%s",
+                repaired_weights,
+            )
 
         try:
             return AIJobAnalysis.model_validate(payload)
@@ -61,12 +78,30 @@ class OpenRouterProvider:
             "cv_text": cv_text,
         }
         payload = self._request_json(
-            "Assess every supplied requirement against the CV. Use exactly one "
+            "assess_candidate",
+            "Return JSON with an assessments array that assesses every supplied requirement against the CV. "
+            "Each array item must contain requirement, classification, and evidence. Use exactly one "
             "classification: strong_match, partial_match, no_evidence, or "
             "contradictory_evidence. Include concise evidence and do not calculate "
             "an aggregate score.",
             json.dumps(prompt),
         )
+        keyed_assessment = payload.get("assessment")
+        if "assessments" not in payload and isinstance(keyed_assessment, dict):
+            payload["assessments"] = [
+                {
+                    "requirement": requirement,
+                    **value,
+                }
+                if isinstance(value, dict)
+                else {
+                    "requirement": requirement,
+                    "classification": value,
+                    "evidence": [],
+                }
+                for requirement, value in keyed_assessment.items()
+            ]
+            logger.warning("llm assessment used keyed object; normalized to assessments array")
 
         try:
             return AICandidateAssessment.model_validate(payload)
@@ -77,20 +112,32 @@ class OpenRouterProvider:
         if not texts:
             return []
 
+        started_at = perf_counter()
+        logger.info("llm embedding started model=%s inputs=%s", self.provider_settings.ai_embedding_model, len(texts))
         try:
             response = self.client.embeddings.create(
                 model=self.provider_settings.ai_embedding_model,
                 input=texts,
             )
         except OpenAIError as exc:
+            logger.exception("llm embedding failed model=%s", self.provider_settings.ai_embedding_model)
             raise AIProviderError("OpenRouter embedding request failed") from exc
 
         try:
-            return [item.embedding for item in sorted(response.data, key=lambda item: item.index)]
+            embeddings = [item.embedding for item in sorted(response.data, key=lambda item: item.index)]
+            logger.info(
+                "llm embedding completed model=%s outputs=%s duration_ms=%.1f",
+                self.provider_settings.ai_embedding_model,
+                len(embeddings),
+                (perf_counter() - started_at) * 1000,
+            )
+            return embeddings
         except (AttributeError, TypeError) as exc:
             raise AIResponseError("OpenRouter returned invalid embeddings") from exc
 
-    def _request_json(self, instruction: str, content: str) -> dict[str, Any]:
+    def _request_json(self, operation: str, instruction: str, content: str) -> dict[str, Any]:
+        started_at = perf_counter()
+        logger.info("llm chat started operation=%s model=%s", operation, self.provider_settings.ai_model)
         try:
             response = self.client.chat.completions.create(
                 model=self.provider_settings.ai_model,
@@ -101,6 +148,7 @@ class OpenRouterProvider:
                 response_format={"type": "json_object"},
             )
         except OpenAIError as exc:
+            logger.exception("llm chat failed operation=%s model=%s", operation, self.provider_settings.ai_model)
             raise AIProviderError("OpenRouter chat request failed") from exc
 
         try:
@@ -110,6 +158,12 @@ class OpenRouterProvider:
             payload = json.loads(message)
             if not isinstance(payload, dict):
                 raise ValueError("response was not an object")
+            logger.info(
+                "llm chat completed operation=%s model=%s duration_ms=%.1f",
+                operation,
+                self.provider_settings.ai_model,
+                (perf_counter() - started_at) * 1000,
+            )
             return payload
         except (AttributeError, IndexError, TypeError, ValueError, json.JSONDecodeError) as exc:
             raise AIResponseError("OpenRouter returned invalid JSON") from exc
