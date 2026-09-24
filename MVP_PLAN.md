@@ -61,8 +61,8 @@ Browser
 - LLM provider: OpenRouter.
 - LLM API: OpenAI-compatible API.
 - Initial LLM: configurable, default `openai/gpt-4o-mini`.
-- Embedding provider: configurable OpenAI-compatible embeddings API.
-- Initial embedding model: configurable, default `openai/text-embedding-3-small`.
+- Embedding provider: local Hugging Face Sentence Transformers model.
+- Initial embedding model: configurable, default `sentence-transformers/all-MiniLM-L6-v2`.
 - API key: `AI_API_KEY`, supplied at runtime only.
 - Embeddings: calculated in memory per analysis; no vector database.
 - Training and fine-tuning: out of scope.
@@ -97,7 +97,7 @@ Implement provider adapters behind the existing AI boundary.
 Required behavior:
 
 - Send structured prompts and parse validated JSON from OpenRouter.
-- Request embeddings for requirements and relevant CV chunks.
+- Generate local embeddings for requirements and relevant CV chunks.
 - Use configurable provider, model, base URL, timeout, and attribution headers.
 - Fail clearly when the API key is missing.
 - Handle timeout, HTTP, rate-limit, malformed-response, and embedding failures.
@@ -188,7 +188,7 @@ Complete:
 - Requirement coverage: exactly one assessment per requirement.
 - Chunking and cosine similarity.
 - Component score calculation and deterministic ranking.
-- Mocked OpenRouter LLM and embedding responses.
+- Mocked OpenRouter LLM responses and local embedding-provider tests.
 - Missing key, timeout, rate limit, invalid JSON, and provider failures.
 - Successful analysis, missing job, empty CV batch, and partial provider failure.
 - No fabricated output after an AI failure.

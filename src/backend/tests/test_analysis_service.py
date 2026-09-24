@@ -103,5 +103,5 @@ def test_analysis_service_requires_complete_ai_assessments():
 def test_split_cv_text_uses_paragraphs_and_chunks_long_text():
     chunks = split_cv_text("Summary\n\n" + "Python " * 300, max_chunk_length=100)
 
-    assert chunks[0] == "Summary"
+    assert chunks[0] == "general: Summary"
     assert all(len(chunk) <= 100 for chunk in chunks)

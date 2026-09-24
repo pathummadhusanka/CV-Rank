@@ -87,8 +87,8 @@ The worklog tracks meaningful backend milestones rather than individual commits 
 
 ## 2026-09-24 - OpenRouter and Embedding Adapter Milestone
 
-- **Scope:** OpenRouter-compatible LLM adapter, embedding requests, controlled provider errors, and cosine similarity utility.
-- **Outcome:** Structured job extraction, candidate assessment, embedding calls, missing-key handling, malformed-response handling, and vector comparison are covered without network calls.
+- **Scope:** OpenRouter-compatible LLM adapter, local Sentence Transformers embeddings, controlled provider errors, and cosine similarity utility.
+- **Outcome:** Structured job extraction, candidate assessment, local embedding calls, missing-key handling, malformed-response handling, and vector comparison are covered without network calls.
 - **Evidence:** `uv run pytest tests/test_ai.py tests/test_openrouter_provider.py -q` passes with `9` tests.
 - **Next checkpoint:** Build the AI analysis service that combines requirements, CV chunks, embeddings, LLM assessments, and deterministic scoring.
 

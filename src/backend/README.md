@@ -25,7 +25,7 @@ Optional variables:
 - Configure the AI provider at runtime. The selected provider is OpenRouter.
 - `AI_PROVIDER`=openrouter
 - `AI_MODEL`=openai/gpt-4o-mini
-- `AI_EMBEDDING_MODEL`=openai/text-embedding-3-small
+- `AI_EMBEDDING_MODEL`=sentence-transformers/all-MiniLM-L6-v2
 - `AI_API_KEY`=your-openrouter-key
 - `AI_BASE_URL`=https://openrouter.ai/api/v1
 

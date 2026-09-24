@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import re
 
 from app.ai.errors import AIResponseError
 from app.ai.provider import AIProvider
@@ -33,7 +34,28 @@ class CandidateDocument:
 
 
 def split_cv_text(text: str, max_chunk_length: int = 1200) -> list[str]:
-    paragraphs = [paragraph.strip() for paragraph in text.split("\n\n") if paragraph.strip()]
+    section_names = {
+        "summary",
+        "profile",
+        "skills",
+        "experience",
+        "employment",
+        "education",
+        "projects",
+        "certifications",
+    }
+    current_section = "general"
+    sectioned_lines = []
+
+    for line in text.splitlines():
+        normalized = re.sub(r"[^a-z ]", "", line.lower()).strip()
+        if normalized in section_names:
+            current_section = normalized
+            continue
+        if line.strip():
+            sectioned_lines.append(f"{current_section}: {line.strip()}")
+
+    paragraphs = [paragraph.strip() for paragraph in "\n".join(sectioned_lines).split("\n\n") if paragraph.strip()]
     chunks = []
 
     for paragraph in paragraphs:

@@ -38,9 +38,9 @@ Only record decisions that materially affect backend architecture, data behavior
 
 - **Date:** 2026-09-24
 - **Status:** Accepted
-- **Decision:** Use embeddings for semantic similarity between job requirements and meaningful CV sections, use the LLM for extraction and ambiguous reasoning, and use deterministic Python code for the final weighted score and ranking.
+- **Decision:** Use a local Hugging Face Sentence Transformers model for semantic similarity between job requirements and meaningful CV sections, use the OpenRouter LLM for extraction and ambiguous reasoning, and use deterministic Python code for the final weighted score and ranking.
 - **Reason:** This demonstrates a genuine ML matching component while keeping the final score reproducible, explainable, configurable, and testable.
-- **Impact:** MVP embeddings are calculated in memory per analysis; no vector database, model training, or fine-tuning is required. Score weights are required skills 40%, preferred skills 15%, experience 25%, and semantic similarity 20%.
+- **Impact:** MVP embeddings are calculated in memory per analysis using `sentence-transformers/all-MiniLM-L6-v2`; no vector database, model training, or fine-tuning is required. Score weights are required skills 40%, preferred skills 15%, experience 25%, and semantic similarity 20%.
 
 ## Isolated Database for Automated Tests
 

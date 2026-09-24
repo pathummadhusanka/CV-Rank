@@ -3,7 +3,7 @@
 CV-Rank compares multiple candidate PDF CVs against one job description using a hybrid AI pipeline:
 
 - OpenRouter LLM for requirement extraction, CV understanding, ambiguous matching, and evidence.
-- Embeddings for semantic similarity between job requirements and CV sections.
+- Local Hugging Face Sentence Transformers embeddings for semantic similarity between job requirements and CV sections.
 - Python for deterministic weighted scoring and ranking.
 
 The system supports human review and does not make autonomous hiring decisions.
@@ -22,7 +22,7 @@ copy .env.example .env
 type .env
 ```
 
-Put your OpenRouter key in `.env` as `AI_API_KEY`. Do not commit `.env`.
+Put your OpenRouter key in `.env` as `AI_API_KEY`. The embedding model runs locally in the backend container. Do not commit `.env`.
 
 Start the application:
 
