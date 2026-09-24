@@ -60,13 +60,7 @@ docker compose down --volumes
 
 ## User Manual
 
-1. Open the application and create or select a job.
-2. Review the job description and extracted requirements.
-3. Upload one or more synthetic or anonymized PDF CVs.
-4. Select **Run AI Candidate Analysis**.
-5. Review the ranked candidates, component scores, evidence, strengths, and gaps.
-6. Open a candidate to inspect the requirement-level explanation.
-7. Save the evaluation project if you need to revisit the results.
+See the complete [User Manual](docs/USER_MANUAL.md) for the hiring-manager workflow. In short: select a job, upload PDF CVs, run AI analysis, review the ranked evidence, and save the evaluation project.
 
 The application shows an error when the AI provider is unavailable. It does not replace failed AI results with keyword-only rankings.
 
@@ -74,6 +68,10 @@ The application shows an error when the AI provider is unavailable. It does not 
 
 - [SPEC.md](SPEC.md) - product specification and scoring methodology.
 - [MVP_PLAN.md](MVP_PLAN.md) - implementation milestones and definition of done.
+- [User Manual](docs/USER_MANUAL.md) - non-technical hiring-manager instructions.
+- [Available Features](docs/FEATURES.md) - implemented features and explicit exclusions.
+- [Architecture](docs/ARCHITECTURE.md) - system flow, AI boundaries, and code areas.
+- [Developer Guide](docs/DEVELOPER_GUIDE.md) - local development, Docker, testing, and contribution workflow.
 - [Backend worklog](src/backend/docs/WORKLOG.md) - milestone history.
 - [Backend decisions](src/backend/docs/DECISIONS.md) - major architectural decisions.
 - [Prompt record](src/backend/docs/PROMPTS.md) - AI prompt contracts.
