@@ -33,6 +33,7 @@ export default function HomePage() {
 	const [savedProjectName, setSavedProjectName] = useState("");
 	const [isProjectSaved, setIsProjectSaved] = useState(false);
 	const [projectJobAvailable, setProjectJobAvailable] = useState(true);
+	const [isChoosingJob, setIsChoosingJob] = useState(false);
 	const [reviewedRequirements, setReviewedRequirements] = useState<AIRequirement[] | null>(null);
 	const [requirementsLoading, setRequirementsLoading] = useState(false);
 	const [requirementsError, setRequirementsError] = useState<string | null>(null);
@@ -46,7 +47,7 @@ export default function HomePage() {
 				setActiveJob((currentJob) =>
 					currentJob && jobs.some((job) => job.id === currentJob.id)
 						? currentJob
-						: jobs[0] ?? null,
+						: null,
 				);
 			})
 			.catch(() => {
@@ -91,6 +92,7 @@ export default function HomePage() {
 					jobsLoaded && storedJobs.some((job) => job.id === project.job.id),
 				);
 				setActiveJob(project.job);
+				setIsChoosingJob(false);
 				setCandidates(project.candidates);
 				setRankedResults(project.results);
 				setSavedProjectName(project.name);
@@ -102,16 +104,19 @@ export default function HomePage() {
 		const jobId = searchParams.get("jobId");
 		if (jobId) {
 			const found = storedJobs.find((job) => job.id === jobId);
-			if (found) setActiveJob(found);
-		} else if (!activeJob && storedJobs.length > 0) {
-			setActiveJob(storedJobs[0]);
+			if (found) {
+				setActiveJob(found);
+				setIsChoosingJob(false);
+				setSearchParams({});
+			}
 		}
-	}, [searchParams, storedJobs, activeJob, jobsLoaded]);
+	}, [searchParams, storedJobs, activeJob, jobsLoaded, isChoosingJob]);
 
 	const handleSelectJob = (job: CreateJobResponse) => {
 		setActiveJob(job);
+		setIsChoosingJob(false);
 		setProjectJobAvailable(true);
-		setSearchParams({ jobId: job.id });
+		setSearchParams({});
 		setShowNewJobForm(false);
 		setCandidates([]);
 		setUploadedCandidates([]);
@@ -124,8 +129,9 @@ export default function HomePage() {
 	const handleJobCreated = (newJob: CreateJobResponse) => {
 		setStoredJobs((jobs) => [newJob, ...jobs]);
 		setActiveJob(newJob);
+		setIsChoosingJob(false);
 		setProjectJobAvailable(true);
-		setSearchParams({ jobId: newJob.id });
+		setSearchParams({});
 		setShowNewJobForm(false);
 		setAnalysisError(null);
 		setIsProjectSaved(false);
@@ -207,6 +213,7 @@ export default function HomePage() {
 
 	const handleResetJob = () => {
 		setActiveJob(null);
+		setIsChoosingJob(true);
 		setProjectJobAvailable(true);
 		setSearchParams({});
 		setCandidates([]);
@@ -242,7 +249,7 @@ export default function HomePage() {
 			)}
 
 			<section>
-				{!activeJob ? (
+				{!activeJob || isChoosingJob ? (
 					<div className="space-y-4">
 						<div className="space-y-4 rounded-xl border border-border bg-card p-6 shadow-xs">
 							<div className="flex items-center justify-between border-b border-border/60 pb-3">
