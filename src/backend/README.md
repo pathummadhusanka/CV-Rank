@@ -9,6 +9,7 @@
 * `POST /cvs` - Upload CV in PDF format
 * `POST /matching/jobs/{job_id}/cvs/{cv_id}` - Match a CV against a job
 * `POST /matching/jobs/{job_id}` - Rank all stored CVs against a job
+* `POST /analysis/jobs/{job_id}` - Analyze and rank CVs with the configured AI provider
 * Swagger UI: `http://127.0.0.1:8000/docs`
 
 ## Configurations

@@ -92,6 +92,13 @@ The worklog tracks meaningful backend milestones rather than individual commits 
 - **Evidence:** `uv run pytest tests/test_ai.py tests/test_openrouter_provider.py -q` passes with `9` tests.
 - **Next checkpoint:** Build the AI analysis service that combines requirements, CV chunks, embeddings, LLM assessments, and deterministic scoring.
 
+## 2026-09-24 - Hybrid AI Analysis Milestone
+
+- **Scope:** AI analysis service, CV chunking, requirement-to-CV embedding similarity, weighted component scoring, deterministic ranking, analysis API, and controlled provider failures.
+- **Outcome:** `POST /analysis/jobs/{job_id}` now runs the validated hybrid pipeline with mock or OpenRouter providers and never presents a provider failure as a successful result.
+- **Evidence:** Full backend suite passes with `37` tests.
+- **Next checkpoint:** Replace the frontend keyword fallback with this analysis endpoint and add the root frontend/backend Compose workflow.
+
 ## Current Checkpoint
 
 - **Branch:** `feat/ai`
