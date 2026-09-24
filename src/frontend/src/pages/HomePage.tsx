@@ -18,6 +18,7 @@ import type { RankedCandidate } from "@/types/ranking";
 export default function HomePage() {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const [storedJobs, setStoredJobs] = useState<CreateJobResponse[]>([]);
+	const [jobsLoaded, setJobsLoaded] = useState(false);
 	const [libraryCVs, setLibraryCVs] = useState<CVSummary[]>([]);
 	const [selectedLibraryIds, setSelectedLibraryIds] = useState<string[]>([]);
 	const [uploadedCandidates, setUploadedCandidates] = useState<UploadedCandidate[]>([]);
@@ -31,12 +32,14 @@ export default function HomePage() {
 	const [analysisStatus, setAnalysisStatus] = useState<string | null>(null);
 	const [savedProjectName, setSavedProjectName] = useState("");
 	const [isProjectSaved, setIsProjectSaved] = useState(false);
+	const [projectJobAvailable, setProjectJobAvailable] = useState(true);
 
 	useEffect(() => {
 		getCVs().then(setLibraryCVs).catch(() => setLibraryCVs([]));
 		getJobs()
 			.then((jobs) => {
 				setStoredJobs(jobs);
+				setJobsLoaded(true);
 				setActiveJob((currentJob) =>
 					currentJob && jobs.some((job) => job.id === currentJob.id)
 						? currentJob
@@ -45,6 +48,7 @@ export default function HomePage() {
 			})
 			.catch(() => {
 				setStoredJobs([]);
+				setJobsLoaded(true);
 				setActiveJob(null);
 			});
 	}, []);
@@ -54,6 +58,9 @@ export default function HomePage() {
 		if (projectId) {
 			const project = getStoredProjectById(projectId);
 			if (project) {
+				setProjectJobAvailable(
+					jobsLoaded && storedJobs.some((job) => job.id === project.job.id),
+				);
 				setActiveJob(project.job);
 				setCandidates(project.candidates);
 				setRankedResults(project.results);
@@ -70,10 +77,11 @@ export default function HomePage() {
 		} else if (!activeJob && storedJobs.length > 0) {
 			setActiveJob(storedJobs[0]);
 		}
-	}, [searchParams, storedJobs, activeJob]);
+	}, [searchParams, storedJobs, activeJob, jobsLoaded]);
 
 	const handleSelectJob = (job: CreateJobResponse) => {
 		setActiveJob(job);
+		setProjectJobAvailable(true);
 		setSearchParams({ jobId: job.id });
 		setShowNewJobForm(false);
 		setCandidates([]);
@@ -87,6 +95,7 @@ export default function HomePage() {
 	const handleJobCreated = (newJob: CreateJobResponse) => {
 		setStoredJobs((jobs) => [newJob, ...jobs]);
 		setActiveJob(newJob);
+		setProjectJobAvailable(true);
 		setSearchParams({ jobId: newJob.id });
 		setShowNewJobForm(false);
 		setAnalysisError(null);
@@ -112,7 +121,7 @@ export default function HomePage() {
 	};
 
 	const handleRunEvaluation = async () => {
-		if (!activeJob || candidates.length === 0) return;
+		if (!activeJob || !projectJobAvailable || candidates.length === 0) return;
 
 		setIsAnalyzing(true);
 		setAnalysisStatus("Sending candidates to the AI service...");
@@ -165,6 +174,7 @@ export default function HomePage() {
 
 	const handleResetJob = () => {
 		setActiveJob(null);
+		setProjectJobAvailable(true);
 		setSearchParams({});
 		setCandidates([]);
 		setUploadedCandidates([]);
@@ -323,6 +333,7 @@ export default function HomePage() {
 						onSelectCandidate={setSelectedCandidate}
 						onRerun={handleRunEvaluation}
 						isAnalyzing={isAnalyzing}
+						 canRerun={projectJobAvailable}
 					/>
 				</section>
 			)}

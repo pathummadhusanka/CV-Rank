@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
+import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 import { JobCreator } from "@/components/JobCreator";
 import { getJobs, deleteJob, type CreateJobResponse } from "@/lib/api";
 
@@ -8,6 +9,10 @@ export default function JobsPage() {
 	const navigate = useNavigate();
 	const [jobs, setJobs] = useState<CreateJobResponse[]>([]);
 	const [showCreator, setShowCreator] = useState(false);
+	const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
+	const [isDeleteMode, setIsDeleteMode] = useState(false);
+	const [pendingDeleteIds, setPendingDeleteIds] = useState<string[] | null>(null);
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	useEffect(() => {
 		getJobs()
@@ -24,9 +29,15 @@ export default function JobsPage() {
 		setShowCreator(false);
 	};
 
-	const handleDeleteJob = async (jobId: string) => {
-		await deleteJob(jobId);
-		setJobs((currentJobs) => currentJobs.filter((job) => job.id !== jobId));
+	const handleConfirmDelete = async () => {
+		if (!pendingDeleteIds) return;
+		setIsDeleting(true);
+		await Promise.all(pendingDeleteIds.map((jobId) => deleteJob(jobId)));
+		setJobs((currentJobs) => currentJobs.filter((job) => !pendingDeleteIds.includes(job.id)));
+		setSelectedJobIds((currentIds) => currentIds.filter((id) => !pendingDeleteIds.includes(id)));
+		setIsDeleteMode(false);
+		setPendingDeleteIds(null);
+		setIsDeleting(false);
 	};
 
 	const handleStartEvaluation = (jobId: string) => {
@@ -46,12 +57,30 @@ export default function JobsPage() {
 					</p>
 				</div>
 
-				<Button
-					onClick={() => setShowCreator(!showCreator)}
-					variant={showCreator ? "outline" : "default"}
-				>
-					{showCreator ? "Cancel" : "+ Add New Position"}
-				</Button>
+				<div className="flex items-center gap-2">
+					{isDeleteMode ? (
+						<>
+							<Button variant="outline" size="sm" onClick={() => { setIsDeleteMode(false); setSelectedJobIds([]); }}>
+								Cancel
+							</Button>
+							{selectedJobIds.length > 0 && (
+								<Button variant="destructive" size="sm" onClick={() => setPendingDeleteIds(selectedJobIds)}>
+									Delete Selected ({selectedJobIds.length})
+								</Button>
+							)}
+						</>
+					) : jobs.length > 0 ? (
+						<Button variant="destructive" size="sm" onClick={() => setIsDeleteMode(true)}>
+							Delete
+						</Button>
+					) : null}
+					<Button
+						onClick={() => setShowCreator(!showCreator)}
+						variant={showCreator ? "outline" : "default"}
+					>
+						{showCreator ? "Cancel" : "+ Add New Position"}
+					</Button>
+				</div>
 			</div>
 
 			{/* Creator Drawer/Card */}
@@ -71,6 +100,16 @@ export default function JobsPage() {
 						<div className="space-y-3">
 							<div className="flex items-start justify-between gap-2">
 								<div>
+											{isDeleteMode && <label className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+												<input
+													type="checkbox"
+													checked={selectedJobIds.includes(job.id)}
+													onChange={(event) => setSelectedJobIds((currentIds) => event.target.checked
+														? [...currentIds, job.id]
+														: currentIds.filter((id) => id !== job.id))}
+												/>
+												Select
+											</label>}
 									<div className="flex items-center gap-2 mb-1">
 										<span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
 											ID: {job.id.slice(0, 8)}...
@@ -84,14 +123,6 @@ export default function JobsPage() {
 									</h3>
 								</div>
 
-								<button
-									type="button"
-									onClick={() => handleDeleteJob(job.id)}
-									className="text-muted-foreground hover:text-destructive text-sm font-bold p-1 cursor-pointer"
-									title="Delete position"
-								>
-									&times;
-								</button>
 							</div>
 
 							{/* Extracted criteria chips */}
@@ -142,6 +173,16 @@ export default function JobsPage() {
 					</div>
 				))}
 			</div>
+
+			{pendingDeleteIds && (
+				<ConfirmDeleteModal
+					count={pendingDeleteIds.length}
+					itemLabel="job"
+					isDeleting={isDeleting}
+					onCancel={() => setPendingDeleteIds(null)}
+					onConfirm={handleConfirmDelete}
+				/>
+			)}
 		</div>
 	);
 }

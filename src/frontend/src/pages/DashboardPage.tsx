@@ -1,25 +1,54 @@
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
+import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 import {
 	getStoredProjects,
 	deleteStoredProject,
 	type EvaluationProject,
 } from "@/lib/storage";
-import { getJobs } from "@/lib/api";
+import { getCVs, getJobs } from "@/lib/api";
 
 export default function DashboardPage() {
 	const navigate = useNavigate();
 	const [jobs, setJobs] = useState(0);
+	const [availableJobIds, setAvailableJobIds] = useState<string[]>([]);
+	const [availableCVIds, setAvailableCVIds] = useState<string[]>([]);
+	const [recordsLoaded, setRecordsLoaded] = useState(false);
 	const [projects, setProjects] = useState<EvaluationProject[]>(() => getStoredProjects());
+	const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
+	const [pendingDeleteIds, setPendingDeleteIds] = useState<string[] | null>(null);
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	useEffect(() => {
-		getJobs().then((loadedJobs) => setJobs(loadedJobs.length)).catch(() => setJobs(0));
+		Promise.all([getJobs(), getCVs()])
+			.then(([loadedJobs, loadedCVs]) => {
+				setJobs(loadedJobs.length);
+				setAvailableJobIds(loadedJobs.map((job) => job.id));
+				setAvailableCVIds(loadedCVs.map((cv) => cv.id));
+				setRecordsLoaded(true);
+			})
+			.catch(() => {
+				setJobs(0);
+				setAvailableJobIds([]);
+				setAvailableCVIds([]);
+				setRecordsLoaded(true);
+			});
 	}, []);
 
-	const handleDeleteProject = (projectId: string) => {
-		const updated = deleteStoredProject(projectId);
-		setProjects(updated);
+	const handleConfirmDelete = () => {
+		if (!pendingDeleteIds) return;
+		setIsDeleting(true);
+		const remainingProjects = projects.filter((project) => !pendingDeleteIds.includes(project.id));
+		const deletedIds = new Set(pendingDeleteIds);
+		let updatedProjects = projects;
+		for (const projectId of deletedIds) {
+			updatedProjects = deleteStoredProject(projectId);
+		}
+		setProjects(remainingProjects.length === updatedProjects.length ? remainingProjects : updatedProjects);
+		setSelectedProjectIds([]);
+		setPendingDeleteIds(null);
+		setIsDeleting(false);
 	};
 
 	const handleOpenProject = (projectId: string) => {
@@ -112,9 +141,16 @@ export default function DashboardPage() {
 						</p>
 					</div>
 
-					<span className="text-xs font-semibold px-2 py-0.5 rounded bg-muted text-muted-foreground">
-						{projects.length} Saved
-					</span>
+					<div className="flex items-center gap-2">
+						{selectedProjectIds.length > 0 && (
+							<Button variant="destructive" size="sm" onClick={() => setPendingDeleteIds(selectedProjectIds)}>
+								Delete Selected ({selectedProjectIds.length})
+							</Button>
+						)}
+						<span className="text-xs font-semibold px-2 py-0.5 rounded bg-muted text-muted-foreground">
+							{projects.length} Saved
+						</span>
+					</div>
 				</div>
 
 				{projects.length === 0 ? (
@@ -138,6 +174,10 @@ export default function DashboardPage() {
 					<div className="divide-y divide-border/60 rounded-lg border border-border overflow-hidden bg-background">
 						{projects.map((proj) => {
 							const topCandidate = proj.results[0];
+							const jobRemoved = recordsLoaded && !availableJobIds.includes(proj.job.id);
+							const removedCVCount = recordsLoaded
+								? proj.candidates.filter((candidate) => !availableCVIds.includes(candidate.id)).length
+								: 0;
 							const dateFormatted = new Date(proj.createdAt).toLocaleDateString(undefined, {
 								month: "short",
 								day: "numeric",
@@ -151,6 +191,14 @@ export default function DashboardPage() {
 								>
 									<div className="space-y-1 min-w-0">
 										<div className="flex items-center gap-2">
+											<input
+												type="checkbox"
+												checked={selectedProjectIds.includes(proj.id)}
+												onChange={(event) => setSelectedProjectIds((currentIds) => event.target.checked
+													? [...currentIds, proj.id]
+													: currentIds.filter((id) => id !== proj.id))}
+												aria-label={`Select ${proj.name}`}
+											/>
 											<h4 className="text-sm font-bold text-foreground truncate">
 												{proj.name}
 											</h4>
@@ -167,6 +215,8 @@ export default function DashboardPage() {
 											<span>
 												{proj.results.length} candidate{proj.results.length === 1 ? "" : "s"}
 											</span>
+											{jobRemoved && <span className="rounded bg-rose-500/10 px-1.5 py-0.5 font-semibold text-rose-700">Job removed</span>}
+											{removedCVCount > 0 && <span className="rounded bg-amber-500/10 px-1.5 py-0.5 font-semibold text-amber-700">{removedCVCount} CV{removedCVCount === 1 ? "" : "s"} removed</span>}
 											{topCandidate && (
 												<>
 													<span>&bull;</span>
@@ -184,11 +234,11 @@ export default function DashboardPage() {
 											size="sm"
 											onClick={() => handleOpenProject(proj.id)}
 										>
-											Open Project &rarr;
+											{jobRemoved ? "View Archived Project" : "Open Project"} &rarr;
 										</Button>
 										<button
 											type="button"
-											onClick={() => handleDeleteProject(proj.id)}
+											onClick={() => setPendingDeleteIds([proj.id])}
 											className="size-7 rounded flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-muted cursor-pointer transition-colors"
 											title="Delete project"
 										>
@@ -201,6 +251,15 @@ export default function DashboardPage() {
 					</div>
 				)}
 			</div>
+			{pendingDeleteIds && (
+				<ConfirmDeleteModal
+					count={pendingDeleteIds.length}
+					itemLabel="project"
+					isDeleting={isDeleting}
+					onCancel={() => setPendingDeleteIds(null)}
+					onConfirm={handleConfirmDelete}
+				/>
+			)}
 		</div>
 	);
 }
