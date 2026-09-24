@@ -5,6 +5,7 @@ from time import perf_counter
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from app.ai.errors import AIProviderError
+from app.ai.openrouter_provider import check_openrouter_health
 from app.core.config import settings
 from app.routes.cvs import router as cvs_router
 from app.db.database import create_tables
@@ -40,7 +41,7 @@ async def request_logging_middleware(request: Request, call_next):
 async def ai_provider_error_handler(request: Request, exc: AIProviderError):
     return JSONResponse(
         status_code=503,
-        content={"detail": "AI analysis is currently unavailable"},
+        content={"detail": str(exc), "code": exc.code},
     )
 
 create_tables()
@@ -56,19 +57,28 @@ def health_check():
 
 @app.get("/health/ai")
 def ai_health_check():
-    configured = settings.ai_provider == "mock" or settings.ai_api_key is not None
+    if settings.ai_provider == "mock":
+        return {
+            "provider": settings.ai_provider,
+            "model": settings.ai_model,
+            "status": "ready",
+            "message": "AI analysis is ready (mock provider).",
+        }
+    if settings.ai_provider != "openrouter":
+        return {
+            "provider": settings.ai_provider,
+            "model": settings.ai_model,
+            "status": "unsupported_provider",
+            "message": "The configured AI provider is not supported.",
+        }
+    result = check_openrouter_health()
     logger.info(
         "ai health provider=%s model=%s configured=%s",
         settings.ai_provider,
         settings.ai_model,
-        configured,
+        result["status"] == "ready",
     )
-    return {
-        "provider": settings.ai_provider,
-        "model": settings.ai_model,
-        "configured": configured,
-        "status": "configured" if configured else "missing_api_key",
-    }
+    return result
 
 app.include_router(cvs_router)
 app.include_router(jobs_router)

@@ -4,6 +4,24 @@ export interface HealthResponse {
 	status: string;
 }
 
+export type AIHealthStatus =
+	| "ready"
+	| "missing_api_key"
+	| "invalid_api_key"
+	| "credits_exhausted"
+	| "rate_limited"
+	| "forbidden"
+	| "provider_unavailable"
+	| "unsupported_provider";
+
+export interface AIHealthResponse {
+	provider: string;
+	model: string;
+	status: AIHealthStatus;
+	message: string;
+	limit_remaining?: number | null;
+}
+
 export interface JobRequirements {
 	skills: string[];
 	experience_years: number | null;
@@ -120,6 +138,11 @@ async function handleResponse<T>(res: Response): Promise<T> {
 export async function getHealth(): Promise<HealthResponse> {
 	const res = await fetch("/api/health");
 	return handleResponse<HealthResponse>(res);
+}
+
+export async function getAIHealth(): Promise<AIHealthResponse> {
+	const res = await fetch("/api/health/ai");
+	return handleResponse<AIHealthResponse>(res);
 }
 
 export async function createJob(payload: CreateJobPayload): Promise<CreateJobResponse> {

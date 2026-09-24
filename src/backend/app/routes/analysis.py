@@ -58,5 +58,5 @@ def analyze_job(
         logger.exception("analysis provider_error job_id=%s", job_id)
         raise HTTPException(
             status_code=503,
-            detail="AI analysis is currently unavailable",
+            detail=str(exc),
         ) from exc
