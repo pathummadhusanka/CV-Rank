@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 import { JobCreator } from "@/components/JobCreator";
+import { ExtractionDictionaryPanel } from "@/components/ExtractionDictionaryPanel";
 import { getJobs, deleteJob, updateJob, type CreateJobResponse } from "@/lib/api";
 
 export default function JobsPage() {
@@ -18,6 +19,7 @@ export default function JobsPage() {
 	const [editDescription, setEditDescription] = useState("");
 	const [isSaving, setIsSaving] = useState(false);
 	const [editError, setEditError] = useState<string | null>(null);
+	const [showDictionary, setShowDictionary] = useState(false);
 
 	useEffect(() => {
 		getJobs()
@@ -112,6 +114,9 @@ export default function JobsPage() {
 							Delete
 						</Button>
 					) : null}
+					<Button variant={showDictionary ? "outline" : "default"} onClick={() => setShowDictionary((visible) => !visible)}>
+						{showDictionary ? "Close Dictionary" : "Extraction Dictionary"}
+					</Button>
 					<Button
 						onClick={() => setShowCreator(!showCreator)}
 						variant={showCreator ? "outline" : "default"}
@@ -127,6 +132,7 @@ export default function JobsPage() {
 					<JobCreator onJobCreated={handleJobCreated} />
 				</div>
 			)}
+			{showDictionary && <ExtractionDictionaryPanel />}
 
 			{/* Jobs Grid */}
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
