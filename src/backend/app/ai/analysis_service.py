@@ -75,11 +75,12 @@ class AIAnalysisService:
         self,
         job_description: str,
         candidates: list[CandidateDocument],
+        requirements: AIJobAnalysis | None = None,
     ) -> AIAnalysisResult:
         if not job_description.strip():
             raise AIResponseError("Job description cannot be empty")
 
-        requirements = self.provider.extract_requirements(job_description)
+        requirements = requirements or self.extract_requirements(job_description)
         self._validate_requirements(requirements)
         results = [
             self._analyze_candidate(job_description, requirements, candidate)
@@ -92,6 +93,11 @@ class AIAnalysisService:
             requirements=requirements.requirements,
             candidates=ranked,
         )
+
+    def extract_requirements(self, job_description: str) -> AIJobAnalysis:
+        requirements = self.provider.extract_requirements(job_description)
+        self._validate_requirements(requirements)
+        return requirements
 
     def _analyze_candidate(
         self,
