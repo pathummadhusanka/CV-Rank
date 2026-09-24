@@ -1,7 +1,9 @@
 fastapi
+openai
 uvicorn
 python-multipart
 python-dotenv
 pydantic-settings
 pypdf
+sentence-transformers
 sqlalchemy

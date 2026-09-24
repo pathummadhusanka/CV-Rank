@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+
+# Local development state
+src/backend/storage/
+src/backend/.venv/
+src/frontend/node_modules/
+__pycache__/
+.pytest_cache/
