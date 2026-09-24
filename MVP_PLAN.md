@@ -231,9 +231,5 @@ Do not implement before the core flow works:
 - The frontend displays backend results without fabricating evidence or silently falling back to keywords.
 - Provider failures are controlled and covered by tests.
 - SPEC, README, WORKLOG, DECISIONS, and PROMPTS describe the implementation that actually runs.
----
-noteId: "3a3ffdd0b7b211f1b7d36fb7948e8c50"
-tags: []
 
----
 

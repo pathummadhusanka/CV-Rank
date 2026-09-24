@@ -102,7 +102,47 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 				{/* Modal Body */}
 				<div className="p-6 overflow-y-auto space-y-5 flex-1">
 					{/* Backend Sub-Scores Breakdown */}
-					{candidate.scores && (
+					{candidate.scoreBreakdown ? (
+						<div className="rounded-lg border border-border bg-muted/40 p-3.5 space-y-2">
+							<div className="text-xs font-semibold text-foreground uppercase tracking-wider">
+								Hybrid AI Scoring Formula
+							</div>
+							<div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+								<div className="bg-background rounded-md p-2 border border-border/60">
+									<span className="text-[10px] text-muted-foreground uppercase block font-medium">
+										Required Skills (40%)
+									</span>
+									<span className="text-sm font-bold text-foreground">
+										{candidate.scoreBreakdown.requiredSkills}%
+									</span>
+								</div>
+								<div className="bg-background rounded-md p-2 border border-border/60">
+									<span className="text-[10px] text-muted-foreground uppercase block font-medium">
+										Preferred Skills (15%)
+									</span>
+									<span className="text-sm font-bold text-foreground">
+										{candidate.scoreBreakdown.preferredSkills}%
+									</span>
+								</div>
+								<div className="bg-background rounded-md p-2 border border-border/60">
+									<span className="text-[10px] text-muted-foreground uppercase block font-medium">
+										Experience (25%)
+									</span>
+									<span className="text-sm font-bold text-foreground">
+										{candidate.scoreBreakdown.experience}%
+									</span>
+								</div>
+								<div className="bg-background rounded-md p-2 border border-border/60">
+									<span className="text-[10px] text-muted-foreground uppercase block font-medium">
+										Semantic (20%)
+									</span>
+									<span className="text-sm font-bold text-foreground">
+										{candidate.scoreBreakdown.semanticSimilarity}%
+									</span>
+								</div>
+							</div>
+						</div>
+					) : candidate.scores && (
 						<div className="rounded-lg border border-border bg-muted/40 p-3.5 space-y-2">
 							<div className="text-xs font-semibold text-foreground uppercase tracking-wider">
 								Weighted Scoring Formula

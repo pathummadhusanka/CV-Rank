@@ -28,6 +28,47 @@ export interface UploadCVResponse {
 	status: string;
 }
 
+export interface AIRequirement {
+	description: string;
+	category: string;
+	required: boolean;
+	weight: number;
+}
+
+export type AIAssessmentClassification =
+	| "strong_match"
+	| "partial_match"
+	| "no_evidence"
+	| "contradictory_evidence";
+
+export interface AIRequirementMatch {
+	requirement: AIRequirement;
+	classification: AIAssessmentClassification;
+	evidence: string[];
+	semantic_similarity: number;
+	match_value: number;
+}
+
+export interface AIAnalysisCandidate {
+	rank: number;
+	cv_id: string;
+	filename: string;
+	required_skill_score: number;
+	preferred_skill_score: number;
+	experience_score: number;
+	semantic_similarity_score: number;
+	overall_score: number;
+	matches: AIRequirementMatch[];
+	strengths: string[];
+	gaps: string[];
+	explanation: string;
+}
+
+export interface AIAnalysisResponse {
+	requirements: AIRequirement[];
+	candidates: AIAnalysisCandidate[];
+}
+
 export class ApiError extends Error {
 	status: number;
 
@@ -125,5 +166,12 @@ export async function matchCVToJob(jobId: string, cvId: string): Promise<MatchCV
 		method: "POST",
 	});
 	return handleResponse<MatchCVResponse>(res);
+}
+
+export async function analyzeJob(jobId: string): Promise<AIAnalysisResponse> {
+	const res = await fetch(`/api/analysis/jobs/${jobId}`, {
+		method: "POST",
+	});
+	return handleResponse<AIAnalysisResponse>(res);
 }
 
