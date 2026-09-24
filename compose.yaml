@@ -17,9 +17,4 @@ services:
       AI_HTTP_REFERER: ${AI_HTTP_REFERER:-}
       AI_APP_TITLE: ${AI_APP_TITLE:-CV-Rank}
       AI_TIMEOUT_SECONDS: ${AI_TIMEOUT_SECONDS:-30}
-    volumes:
-      - cv-rank-storage:/app/backend/storage
     restart: unless-stopped
-
-volumes:
-  cv-rank-storage:

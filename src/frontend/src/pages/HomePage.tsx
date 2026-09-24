@@ -8,18 +8,16 @@ import { JobRequirementsCard } from "@/components/JobRequirementsCard";
 import { Button } from "@/components/ui/button";
 import { evaluateCandidatesLive } from "@/lib/rankingEngine";
 import {
-	getStoredJobs,
 	getStoredProjectById,
-	saveStoredJob,
 	saveStoredProject,
 	type EvaluationProject,
 } from "@/lib/storage";
-import { getCVs, type CreateJobResponse, type CVSummary } from "@/lib/api";
+import { getCVs, getJobs, type CreateJobResponse, type CVSummary } from "@/lib/api";
 import type { RankedCandidate } from "@/types/ranking";
 
 export default function HomePage() {
 	const [searchParams, setSearchParams] = useSearchParams();
-	const [storedJobs, setStoredJobs] = useState<CreateJobResponse[]>(() => getStoredJobs());
+	const [storedJobs, setStoredJobs] = useState<CreateJobResponse[]>([]);
 	const [libraryCVs, setLibraryCVs] = useState<CVSummary[]>([]);
 	const [selectedLibraryIds, setSelectedLibraryIds] = useState<string[]>([]);
 	const [uploadedCandidates, setUploadedCandidates] = useState<UploadedCandidate[]>([]);
@@ -36,6 +34,19 @@ export default function HomePage() {
 
 	useEffect(() => {
 		getCVs().then(setLibraryCVs).catch(() => setLibraryCVs([]));
+		getJobs()
+			.then((jobs) => {
+				setStoredJobs(jobs);
+				setActiveJob((currentJob) =>
+					currentJob && jobs.some((job) => job.id === currentJob.id)
+						? currentJob
+						: jobs[0] ?? null,
+				);
+			})
+			.catch(() => {
+				setStoredJobs([]);
+				setActiveJob(null);
+			});
 	}, []);
 
 	useEffect(() => {
@@ -74,7 +85,7 @@ export default function HomePage() {
 	};
 
 	const handleJobCreated = (newJob: CreateJobResponse) => {
-		setStoredJobs(saveStoredJob(newJob));
+		setStoredJobs((jobs) => [newJob, ...jobs]);
 		setActiveJob(newJob);
 		setSearchParams({ jobId: newJob.id });
 		setShowNewJobForm(false);

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
 import { Button } from "@/components/ui/button";
-import { getCVs, type CVSummary } from "@/lib/api";
+import { deleteCV, getCVs, type CVSummary } from "@/lib/api";
 
 export default function CVLibraryPage() {
 	const [cvs, setCVs] = useState<CVSummary[]>([]);
@@ -12,6 +12,11 @@ export default function CVLibraryPage() {
 			setError(reason instanceof Error ? reason.message : "Could not load CVs");
 		});
 	}, []);
+
+	const handleDelete = async (cvId: string) => {
+		await deleteCV(cvId);
+		setCVs((currentCVs) => currentCVs.filter((cv) => cv.id !== cvId));
+	};
 
 	return (
 		<div className="space-y-6">
@@ -37,7 +42,10 @@ export default function CVLibraryPage() {
 									<h2 className="truncate text-sm font-bold text-foreground">{cv.filename}</h2>
 									<p className="mt-1 text-xs text-muted-foreground">Uploaded {new Date(cv.created_at).toLocaleString()}</p>
 								</div>
-								<span className="rounded bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">{cv.status}</span>
+								<div className="flex items-center gap-2">
+									<span className="rounded bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">{cv.status}</span>
+									<button type="button" onClick={() => handleDelete(cv.id)} className="text-xs font-bold text-muted-foreground hover:text-destructive" title="Delete CV">&times;</button>
+								</div>
 							</div>
 							<p className="mt-3 text-xs text-muted-foreground">{cv.skills || "No detected skills"}</p>
 						</div>

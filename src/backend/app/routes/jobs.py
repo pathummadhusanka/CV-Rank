@@ -1,5 +1,5 @@
 from uuid import uuid4
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -63,3 +63,15 @@ def create_job_endpoint(
         "status": "created",
         "requirements": requirements,
     }
+
+
+@router.delete("/{job_id}", status_code=204)
+def delete_job(
+    job_id: str,
+    session: Session = Depends(get_session),
+) -> None:
+    job = session.get(Job, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    session.delete(job)
+    session.commit()

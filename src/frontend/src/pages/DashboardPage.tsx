@@ -1,17 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
-	getStoredJobs,
 	getStoredProjects,
 	deleteStoredProject,
 	type EvaluationProject,
 } from "@/lib/storage";
+import { getJobs } from "@/lib/api";
 
 export default function DashboardPage() {
 	const navigate = useNavigate();
-	const [jobs] = useState(() => getStoredJobs());
+	const [jobs, setJobs] = useState(0);
 	const [projects, setProjects] = useState<EvaluationProject[]>(() => getStoredProjects());
+
+	useEffect(() => {
+		getJobs().then((loadedJobs) => setJobs(loadedJobs.length)).catch(() => setJobs(0));
+	}, []);
 
 	const handleDeleteProject = (projectId: string) => {
 		const updated = deleteStoredProject(projectId);
@@ -61,7 +65,7 @@ export default function DashboardPage() {
 					<span className="text-xs text-muted-foreground uppercase font-semibold">
 						Job Positions
 					</span>
-					<div className="text-2xl font-black text-foreground">{jobs.length}</div>
+					<div className="text-2xl font-black text-foreground">{jobs}</div>
 					<p className="text-[11px] text-muted-foreground">Available criteria targets</p>
 				</div>
 

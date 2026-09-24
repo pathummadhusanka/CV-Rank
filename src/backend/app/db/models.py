@@ -41,3 +41,10 @@ class Job(Base):
         DateTime,
         default=utc_now,
     )
+
+
+class DatabaseState(Base):
+    __tablename__ = "database_state"
+
+    key: Mapped[str] = mapped_column(primary_key=True)
+    value: Mapped[str]

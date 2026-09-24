@@ -117,3 +117,16 @@ async def upload_cv(
         "filename": file.filename,
         "status": "processed",
     }
+
+
+@router.delete("/{cv_id}", status_code=204)
+def delete_cv(
+    cv_id: str,
+    session: Session = Depends(get_session),
+) -> None:
+    cv = session.get(CV, cv_id)
+    if not cv:
+        raise HTTPException(status_code=404, detail="CV not found")
+    Path(cv.file_path).unlink(missing_ok=True)
+    session.delete(cv)
+    session.commit()

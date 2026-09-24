@@ -1,24 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { JobCreator } from "@/components/JobCreator";
-import { getStoredJobs, saveStoredJob, deleteStoredJob } from "@/lib/storage";
-import type { CreateJobResponse } from "@/lib/api";
+import { getJobs, deleteJob, type CreateJobResponse } from "@/lib/api";
 
 export default function JobsPage() {
 	const navigate = useNavigate();
-	const [jobs, setJobs] = useState<CreateJobResponse[]>(() => getStoredJobs());
+	const [jobs, setJobs] = useState<CreateJobResponse[]>([]);
 	const [showCreator, setShowCreator] = useState(false);
 
+	useEffect(() => {
+		getJobs()
+			.then((loadedJobs) => {
+				setJobs(loadedJobs);
+			})
+			.catch(() => {
+				setJobs([]);
+			});
+	}, []);
+
 	const handleJobCreated = (newJob: CreateJobResponse) => {
-		const updated = saveStoredJob(newJob);
-		setJobs(updated);
+		setJobs((currentJobs) => [newJob, ...currentJobs]);
 		setShowCreator(false);
 	};
 
-	const handleDeleteJob = (jobId: string) => {
-		const updated = deleteStoredJob(jobId);
-		setJobs(updated);
+	const handleDeleteJob = async (jobId: string) => {
+		await deleteJob(jobId);
+		setJobs((currentJobs) => currentJobs.filter((job) => job.id !== jobId));
 	};
 
 	const handleStartEvaluation = (jobId: string) => {

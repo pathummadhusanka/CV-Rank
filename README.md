@@ -41,7 +41,6 @@ docker run --rm \
 	--name cv-rank \
 	--env-file .env \
 	-p 3000:80 \
-	-v cv-rank-storage:/app/backend/storage \
 	cv-rank
 ```
 
@@ -53,11 +52,7 @@ Stop the application:
 docker compose down
 ```
 
-The named Docker volume preserves the SQLite database and uploaded CV files. Remove it only when resetting local data:
-
-```bash
-docker compose down --volumes
-```
+The SQLite database and uploaded CV files are container-local. Removing the container with `docker compose down` resets the application data; the next `docker compose up` starts with the initial seed records.
 
 ## User Manual
 

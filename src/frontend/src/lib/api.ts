@@ -22,6 +22,15 @@ export interface CreateJobResponse {
 	requirements: JobRequirements;
 }
 
+interface JobSummaryResponse {
+	id: string;
+	title: string;
+	description: string;
+	required_skills: string;
+	experience_years: number | null;
+	education: string | null;
+}
+
 export interface UploadCVResponse {
 	id: string;
 	filename: string;
@@ -121,6 +130,29 @@ export async function createJob(payload: CreateJobPayload): Promise<CreateJobRes
 	return handleResponse<CreateJobResponse>(res);
 }
 
+export async function getJobs(): Promise<CreateJobResponse[]> {
+	const res = await fetch("/api/jobs");
+	const jobs = await handleResponse<JobSummaryResponse[]>(res);
+	return jobs.map((job) => ({
+		id: job.id,
+		title: job.title,
+		status: "stored",
+		requirements: {
+			skills: job.required_skills
+				.split(",")
+				.map((skill) => skill.trim())
+				.filter(Boolean),
+			experience_years: job.experience_years,
+			education: job.education,
+		},
+	}));
+}
+
+export async function deleteJob(jobId: string): Promise<void> {
+	const res = await fetch(`/api/jobs/${jobId}`, { method: "DELETE" });
+	await handleResponse<void>(res);
+}
+
 export interface SkillMatchResult {
 	matched: string[];
 	missing: string[];
@@ -174,6 +206,11 @@ export async function uploadCV(file: File): Promise<UploadCVResponse> {
 export async function getCVs(): Promise<CVSummary[]> {
 	const res = await fetch("/api/cvs");
 	return handleResponse<CVSummary[]>(res);
+}
+
+export async function deleteCV(cvId: string): Promise<void> {
+	const res = await fetch(`/api/cvs/${cvId}`, { method: "DELETE" });
+	await handleResponse<void>(res);
 }
 
 export async function matchCVToJob(jobId: string, cvId: string): Promise<MatchCVResponse> {
