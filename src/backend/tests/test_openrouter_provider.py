@@ -144,6 +144,39 @@ def test_openrouter_provider_normalizes_keyed_candidate_assessment():
     assert assessment.assessments[0].classification == "strong_match"
 
 
+def test_openrouter_provider_normalizes_string_candidate_evidence():
+    provider = provider_with(
+        FakeClient(
+            {
+                "assessments": [
+                    {
+                        "requirement": "Python",
+                        "classification": "strong_match",
+                        "evidence": "Built Python APIs",
+                    }
+                ]
+            }
+        )
+    )
+
+    assessment = provider.assess_candidate(
+        "Python role",
+        "Python developer",
+        AIJobAnalysis(
+            requirements=[
+                {
+                    "description": "Python",
+                    "category": "skill",
+                    "required": True,
+                    "weight": 1.0,
+                }
+            ]
+        ),
+    )
+
+    assert assessment.assessments[0].evidence == ["Built Python APIs"]
+
+
 def test_openrouter_provider_requires_api_key_without_injected_client():
     with pytest.raises(AIConfigurationError):
         OpenRouterProvider(Settings())

@@ -83,7 +83,8 @@ class OpenRouterProvider:
             "Each array item must contain requirement, classification, and evidence. Use exactly one "
             "classification: strong_match, partial_match, no_evidence, or "
             "contradictory_evidence. Include concise evidence and do not calculate "
-            "an aggregate score.",
+            "an aggregate score. Evidence must always be a JSON array of strings, "
+            "including when there is only one item.",
             json.dumps(prompt),
         )
         keyed_assessment = payload.get("assessment")
@@ -102,6 +103,19 @@ class OpenRouterProvider:
                 for requirement, value in keyed_assessment.items()
             ]
             logger.warning("llm assessment used keyed object; normalized to assessments array")
+
+        assessments = payload.get("assessments")
+        if isinstance(assessments, list):
+            repaired_evidence = 0
+            for assessment in assessments:
+                if isinstance(assessment, dict) and isinstance(assessment.get("evidence"), str):
+                    assessment["evidence"] = [assessment["evidence"]]
+                    repaired_evidence += 1
+            if repaired_evidence:
+                logger.warning(
+                    "llm assessment contained string evidence; normalized to lists count=%s",
+                    repaired_evidence,
+                )
 
         try:
             return AICandidateAssessment.model_validate(payload)
