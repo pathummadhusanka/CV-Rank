@@ -18,6 +18,11 @@ class JobCreate(BaseModel):
     description: str
 
 
+class JobUpdate(BaseModel):
+    title: str
+    description: str
+
+
 @router.get("")
 def list_jobs(
     session: Session = Depends(get_session),
@@ -60,7 +65,37 @@ def create_job_endpoint(
     return {
         "id": job.id,
         "title": job.title,
+        "description": job.description,
         "status": "created",
+        "requirements": requirements,
+    }
+
+
+@router.put("/{job_id}")
+def update_job_endpoint(
+    job_id: str,
+    data: JobUpdate,
+    session: Session = Depends(get_session),
+) -> JobCreateResponse:
+    job = session.get(Job, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if not data.title.strip() or not data.description.strip():
+        raise HTTPException(status_code=400, detail="Title and description are required")
+
+    requirements = parse_job_description(data.description)
+    job.title = data.title.strip()
+    job.description = data.description.strip()
+    job.required_skills = ",".join(requirements["skills"])
+    job.experience_years = requirements["experience_years"]
+    job.education = requirements["education"]
+    session.commit()
+
+    return {
+        "id": job.id,
+        "title": job.title,
+        "description": job.description,
+        "status": "updated",
         "requirements": requirements,
     }
 

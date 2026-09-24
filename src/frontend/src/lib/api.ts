@@ -41,6 +41,7 @@ export interface CreateJobPayload {
 export interface CreateJobResponse {
 	id: string;
 	title: string;
+	description: string;
 	status: string;
 	requirements: JobRequirements;
 }
@@ -167,6 +168,7 @@ export async function getJobs(): Promise<CreateJobResponse[]> {
 	return jobs.map((job) => ({
 		id: job.id,
 		title: job.title,
+		description: job.description,
 		status: "stored",
 		requirements: {
 			skills: job.required_skills
@@ -177,6 +179,15 @@ export async function getJobs(): Promise<CreateJobResponse[]> {
 			education: job.education,
 		},
 	}));
+}
+
+export async function updateJob(jobId: string, payload: CreateJobPayload): Promise<CreateJobResponse> {
+	const res = await fetch(`/api/jobs/${jobId}`, {
+		method: "PUT",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(payload),
+	});
+	return handleResponse<CreateJobResponse>(res);
 }
 
 export async function deleteJob(jobId: string): Promise<void> {

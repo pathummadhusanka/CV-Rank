@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 import { JobCreator } from "@/components/JobCreator";
-import { getJobs, deleteJob, type CreateJobResponse } from "@/lib/api";
+import { getJobs, deleteJob, updateJob, type CreateJobResponse } from "@/lib/api";
 
 export default function JobsPage() {
 	const navigate = useNavigate();
@@ -13,6 +13,11 @@ export default function JobsPage() {
 	const [isDeleteMode, setIsDeleteMode] = useState(false);
 	const [pendingDeleteIds, setPendingDeleteIds] = useState<string[] | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
+	const [editingJobId, setEditingJobId] = useState<string | null>(null);
+	const [editTitle, setEditTitle] = useState("");
+	const [editDescription, setEditDescription] = useState("");
+	const [isSaving, setIsSaving] = useState(false);
+	const [editError, setEditError] = useState<string | null>(null);
 
 	useEffect(() => {
 		getJobs()
@@ -42,6 +47,39 @@ export default function JobsPage() {
 
 	const handleStartEvaluation = (jobId: string) => {
 		navigate(`/?jobId=${jobId}`);
+	};
+
+	const startEditing = (job: CreateJobResponse) => {
+		setEditingJobId(job.id);
+		setEditTitle(job.title);
+		setEditDescription(job.description);
+		setEditError(null);
+	};
+
+	const cancelEditing = () => {
+		setEditingJobId(null);
+		setEditError(null);
+	};
+
+	const saveEditing = async (jobId: string) => {
+		if (!editTitle.trim() || !editDescription.trim()) {
+			setEditError("Title and description are required.");
+			return;
+		}
+		setIsSaving(true);
+		setEditError(null);
+		try {
+			const updatedJob = await updateJob(jobId, {
+				title: editTitle.trim(),
+				description: editDescription.trim(),
+			});
+			setJobs((currentJobs) => currentJobs.map((job) => job.id === jobId ? updatedJob : job));
+			setEditingJobId(null);
+		} catch (error) {
+			setEditError(error instanceof Error ? error.message : "Could not update this job.");
+		} finally {
+			setIsSaving(false);
+		}
 	};
 
 	return (
@@ -159,10 +197,34 @@ export default function JobsPage() {
 									</span>
 								</div>
 							</div>
+
+							<details className="rounded-lg border border-border/70 bg-background p-3">
+								<summary className="cursor-pointer text-xs font-semibold text-foreground">View original job description</summary>
+								<p className="mt-3 whitespace-pre-wrap text-xs leading-5 text-muted-foreground">{job.description}</p>
+							</details>
+
+							{editingJobId === job.id && (
+								<div className="space-y-3 rounded-lg border border-border/70 bg-background p-3">
+									<label className="block space-y-1 text-xs font-semibold text-foreground">
+										Title
+										<input value={editTitle} onChange={(event) => setEditTitle(event.target.value)} className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-normal" />
+									</label>
+									<label className="block space-y-1 text-xs font-semibold text-foreground">
+										Description
+										<textarea value={editDescription} onChange={(event) => setEditDescription(event.target.value)} rows={7} className="w-full resize-y rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-normal" />
+									</label>
+									{editError && <p className="text-xs text-rose-700 dark:text-rose-300">{editError}</p>}
+									<div className="flex justify-end gap-2">
+										<Button variant="outline" size="sm" onClick={cancelEditing} disabled={isSaving}>Cancel</Button>
+										<Button size="sm" onClick={() => saveEditing(job.id)} disabled={isSaving}>{isSaving ? "Saving..." : "Save changes"}</Button>
+									</div>
+								</div>
+							)}
 						</div>
 
 						{/* Action */}
-						<div className="pt-3 border-t border-border/60 flex items-center justify-end">
+						<div className="flex items-center justify-end gap-2 border-t border-border/60 pt-3">
+							{editingJobId !== job.id && <Button variant="outline" size="sm" onClick={() => startEditing(job)}>Edit job</Button>}
 							<Button
 								size="sm"
 								onClick={() => handleStartEvaluation(job.id)}

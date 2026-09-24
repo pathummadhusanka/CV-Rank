@@ -12,6 +12,7 @@ class Requirements(BaseModel):
 class JobCreateResponse(BaseModel):
     id: str
     title: str
+    description: str
     status: str
     requirements: Requirements
 
