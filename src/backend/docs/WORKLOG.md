@@ -102,8 +102,15 @@ The worklog tracks meaningful backend milestones rather than individual commits 
 ## Current Checkpoint
 
 - **Branch:** `feat/ai`
-- **Status:** Core API, persistence, parsing, matching, scoring, typed read endpoints, ranking, automated behavior coverage, Docker configuration, and AI contracts are implemented. Hosted AI assessment is not integrated yet.
-- **Next milestone:** Add the hosted provider adapter and integrate validated AI assessments.
+- **Status:** Core API, persistence, parsing, matching, hybrid AI analysis, typed read endpoints, ranking, frontend integration, and Docker configuration are implemented.
+- **Next milestone:** Complete the real-container smoke run with an OpenRouter key and update any runtime issues found there.
+
+## 2026-09-24 - MVP Compliance Hardening
+
+- **Scope:** Single-container runtime, root secret ignore rules, controlled local embedding-model startup errors, and documentation checkpoint accuracy.
+- **Outcome:** The root `Dockerfile` serves the frontend and backend together, root Compose runs one container, runtime `.env` files are ignored, and model-load failures are represented as controlled AI provider failures.
+- **Evidence:** Root Compose configuration renders successfully; full container smoke test remains dependent on Docker Desktop and a runtime OpenRouter key.
+- **Next checkpoint:** Build with `docker build` and run with `docker run` as required by the assignment.
 
 ## Milestone Entry Template
 

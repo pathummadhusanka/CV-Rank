@@ -32,6 +32,20 @@ docker compose up --build
 
 Open the browser at <http://localhost:3000>.
 
+The same full-stack application can be run as one Docker container:
+
+```bash
+docker build -t cv-rank .
+docker run --rm \
+	--name cv-rank \
+	--env-file .env \
+	-p 3000:80 \
+	-v cv-rank-storage:/app/backend/storage \
+	cv-rank
+```
+
+The container serves the browser application and backend API together. The first startup may download the local embedding model.
+
 Stop the application:
 
 ```bash

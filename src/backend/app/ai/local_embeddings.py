@@ -13,7 +13,14 @@ class LocalEmbeddingProvider:
         model: Any | None = None,
     ):
         self.provider_settings = provider_settings
-        self.model = model or SentenceTransformer(provider_settings.ai_embedding_model)
+        if model is not None:
+            self.model = model
+            return
+
+        try:
+            self.model = SentenceTransformer(provider_settings.ai_embedding_model)
+        except Exception as exc:
+            raise AIProviderError("Local embedding model could not be loaded") from exc
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         if not texts:
