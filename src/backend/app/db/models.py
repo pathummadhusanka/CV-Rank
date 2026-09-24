@@ -48,3 +48,13 @@ class DatabaseState(Base):
 
     key: Mapped[str] = mapped_column(primary_key=True)
     value: Mapped[str]
+
+
+class ExtractionTerm(Base):
+    __tablename__ = "extraction_terms"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    term: Mapped[str] = mapped_column(unique=True)
+    aliases: Mapped[str] = mapped_column(Text, default="")
+    category: Mapped[str] = mapped_column(default="skill")
+    enabled: Mapped[bool] = mapped_column(default=True)

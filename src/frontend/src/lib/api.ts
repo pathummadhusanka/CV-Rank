@@ -71,6 +71,14 @@ export interface CVSummary {
 	created_at: string;
 }
 
+export interface ExtractionTerm {
+	id: number;
+	term: string;
+	aliases: string;
+	category: string;
+	enabled: boolean;
+}
+
 export interface AIRequirement {
 	description: string;
 	category: string;
@@ -149,6 +157,34 @@ export async function getHealth(): Promise<HealthResponse> {
 export async function getAIHealth(): Promise<AIHealthResponse> {
 	const res = await fetch("/api/health/ai");
 	return handleResponse<AIHealthResponse>(res);
+}
+
+export async function getExtractionTerms(): Promise<ExtractionTerm[]> {
+	const res = await fetch("/api/settings/extraction-terms");
+	return handleResponse<ExtractionTerm[]>(res);
+}
+
+export async function createExtractionTerm(payload: Omit<ExtractionTerm, "id">): Promise<ExtractionTerm> {
+	const res = await fetch("/api/settings/extraction-terms", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(payload),
+	});
+	return handleResponse<ExtractionTerm>(res);
+}
+
+export async function deleteExtractionTerm(termId: number): Promise<void> {
+	const res = await fetch(`/api/settings/extraction-terms/${termId}`, { method: "DELETE" });
+	await handleResponse<void>(res);
+}
+
+export async function updateExtractionTerm(termId: number, payload: Omit<ExtractionTerm, "id">): Promise<ExtractionTerm> {
+	const res = await fetch(`/api/settings/extraction-terms/${termId}`, {
+		method: "PUT",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(payload),
+	});
+	return handleResponse<ExtractionTerm>(res);
 }
 
 export async function createJob(payload: CreateJobPayload): Promise<CreateJobResponse> {

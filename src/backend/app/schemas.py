@@ -27,6 +27,21 @@ class JobSummary(BaseModel):
     created_at: datetime
 
 
+class ExtractionTermResponse(BaseModel):
+    id: int
+    term: str
+    aliases: str
+    category: str
+    enabled: bool
+
+
+class ExtractionTermRequest(BaseModel):
+    term: str
+    aliases: str = ""
+    category: str = "skill"
+    enabled: bool = True
+
+
 class CVUploadResponse(BaseModel):
     id: str
     filename: str

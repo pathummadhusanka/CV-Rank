@@ -21,14 +21,17 @@ SKILLS = {
 }
 
 
-def extract_skills(text: str) -> list[str]:
+def extract_skills(text: str, terms=None) -> list[str]:
     text_lower = text.lower()
-
-    return [
-        skill
-        for skill in SKILLS
-        if skill in text_lower
-    ]
+    if terms is None:
+        terms = [{"term": skill, "aliases": ""} for skill in SKILLS]
+    matched = []
+    for item in terms:
+        term = item["term"] if isinstance(item, dict) else item.term
+        aliases = item.get("aliases", "") if isinstance(item, dict) else item.aliases
+        if any(re.search(rf"(?<!\w){re.escape(value.strip().lower())}(?!\w)", text_lower) for value in [term, *aliases.split(",")]):
+            matched.append(term)
+    return matched
 
 
 def extract_experience(text: str) -> int | None:
@@ -63,9 +66,9 @@ def extract_education(text: str) -> str | None:
     return None
 
 
-def parse_job_description(text: str) -> dict:
+def parse_job_description(text: str, terms=None) -> dict:
     return {
-        "skills": extract_skills(text),
+        "skills": extract_skills(text, terms),
         "experience_years": extract_experience(text),
         "education": extract_education(text),
     }

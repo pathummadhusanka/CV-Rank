@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.services.cv_parser import extract_text
 from app.db.database import get_session
-from app.db.models import CV
+from app.db.models import CV, ExtractionTerm
 from app.schemas import CVSummary, CVUploadResponse
 from app.services.cv_service import create_cv
 from app.services.candidate_parser import parse_candidate
@@ -86,7 +86,8 @@ async def upload_cv(
             detail="Could not extract text from the CV",
         )
     
-    candidate = parse_candidate(text)
+    terms = session.query(ExtractionTerm).filter(ExtractionTerm.enabled.is_(True)).all()
+    candidate = parse_candidate(text, terms)
 
     existing_cv = (
         session.query(CV)

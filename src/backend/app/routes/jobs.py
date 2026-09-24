@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db.database import get_session
-from app.db.models import Job
+from app.db.models import ExtractionTerm, Job
 from app.schemas import JobCreateResponse, JobSummary
 from app.services.job_service import create_job
 from app.services.job_parser import parse_job_description
@@ -50,7 +50,8 @@ def create_job_endpoint(
 ) -> JobCreateResponse:
     job_id = str(uuid4())
 
-    requirements = parse_job_description(data.description)
+    terms = session.query(ExtractionTerm).filter(ExtractionTerm.enabled.is_(True)).all()
+    requirements = parse_job_description(data.description, terms)
 
     job = create_job(
         session=session,
@@ -83,7 +84,8 @@ def update_job_endpoint(
     if not data.title.strip() or not data.description.strip():
         raise HTTPException(status_code=400, detail="Title and description are required")
 
-    requirements = parse_job_description(data.description)
+    terms = session.query(ExtractionTerm).filter(ExtractionTerm.enabled.is_(True)).all()
+    requirements = parse_job_description(data.description, terms)
     job.title = data.title.strip()
     job.description = data.description.strip()
     job.required_skills = ",".join(requirements["skills"])

@@ -37,11 +37,18 @@ def get_session() -> Generator[Session, None, None]:
         yield session
 
 def create_tables():
-    from app.db.models import CV, DatabaseState, Job
+    from app.db.models import CV, DatabaseState, ExtractionTerm, Job
 
     Base.metadata.create_all(bind=engine)
 
     with SessionLocal() as session:
+        if not session.query(ExtractionTerm).first():
+            session.add_all([
+                ExtractionTerm(term=term, category="skill")
+                for term in ["python", "sql", "docker", "project management", "customer service", "sales", "accounting"]
+            ])
+            session.commit()
+
         if session.get(DatabaseState, "initial_data_seeded"):
             return
 

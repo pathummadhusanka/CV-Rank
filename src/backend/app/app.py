@@ -12,6 +12,7 @@ from app.db.database import create_tables
 from app.routes.jobs import router as jobs_router
 from app.routes.matching import router as matching_router
 from app.routes.analysis import router as analysis_router
+from app.routes.settings import router as settings_router
 
 
 logging.basicConfig(
@@ -84,3 +85,4 @@ app.include_router(cvs_router)
 app.include_router(jobs_router)
 app.include_router(matching_router)
 app.include_router(analysis_router)
+app.include_router(settings_router)
