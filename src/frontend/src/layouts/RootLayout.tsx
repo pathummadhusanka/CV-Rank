@@ -1,9 +1,12 @@
 import { NavLink, Outlet } from "react-router";
 import { BackendHealthBadge } from "@/components/BackendHealthBadge";
+import { SystemStatusProvider } from "@/components/SystemStatusContext";
+import { SystemStatusWarningBar } from "@/components/SystemStatusWarningBar";
 import { cn } from "@/lib/utils";
 
 export default function RootLayout() {
 	return (
+		<SystemStatusProvider>
 		<div className="min-h-screen flex flex-col bg-background text-foreground">
 			<header className="sticky top-0 z-50 w-full border-b border-border/80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
 				<div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 min-h-14 py-2 flex flex-wrap items-center justify-between gap-2 sm:h-14 sm:flex-nowrap sm:gap-4 sm:py-0">
@@ -31,6 +34,7 @@ export default function RootLayout() {
 					</div>
 				</div>
 			</header>
+			<SystemStatusWarningBar />
 
 			<main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 				<Outlet />
@@ -40,6 +44,7 @@ export default function RootLayout() {
 				<p>CV-Rank &bull; AI-Powered Candidate Evaluation &amp; Ranking System</p>
 			</footer>
 		</div>
+		</SystemStatusProvider>
 	);
 }
 

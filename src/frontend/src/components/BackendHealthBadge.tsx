@@ -1,36 +1,9 @@
-import { useEffect, useState } from "react";
-import {
-	getAIHealth,
-	getHealth,
-	type AIHealthResponse,
-	type HealthResponse,
-} from "@/lib/api";
+import { useState } from "react";
+import { useSystemStatus } from "@/components/SystemStatusContext";
 
 export function BackendHealthBadge() {
-	const [health, setHealth] = useState<HealthResponse | null>(null);
-	const [aiHealth, setAIHealth] = useState<AIHealthResponse | null>(null);
-	const [backendStatus, setBackendStatus] = useState<"checking" | "online" | "offline">("checking");
-	const [lastChecked, setLastChecked] = useState<Date | null>(null);
 	const [isOpen, setIsOpen] = useState(false);
-
-	const checkHealth = async () => {
-		const [backendResult, aiResult] = await Promise.allSettled([getHealth(), getAIHealth()]);
-		if (backendResult.status === "fulfilled") {
-			setHealth(backendResult.value);
-			setBackendStatus(backendResult.value.status === "ok" ? "online" : "offline");
-		} else {
-			setHealth(null);
-			setBackendStatus("offline");
-		}
-		setAIHealth(aiResult.status === "fulfilled" ? aiResult.value : null);
-		setLastChecked(new Date());
-	};
-
-	useEffect(() => {
-		checkHealth();
-		const interval = setInterval(checkHealth, 30000);
-		return () => clearInterval(interval);
-	}, []);
+	const { health, aiHealth, backendStatus, lastChecked, checkHealth } = useSystemStatus();
 
 	const isChecking = backendStatus === "checking";
 	const hasBackendIssue = backendStatus === "offline";
