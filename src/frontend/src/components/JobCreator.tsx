@@ -64,7 +64,7 @@ export function JobCreator({ onJobCreated, disabled }: JobCreatorProps) {
 						Step 1: Define Job Description
 					</h3>
 					<p className="text-xs text-muted-foreground mt-0.5">
-						Enter the position details. The engine will extract skills, experience, and education requirements.
+						Enter the position details. Requirements will be extracted for this specific role and reviewed before evaluation.
 					</p>
 				</div>
 
@@ -135,7 +135,7 @@ export function JobCreator({ onJobCreated, disabled }: JobCreatorProps) {
 						size="lg"
 						disabled={isSubmitting || disabled}
 					>
-						{isSubmitting ? "Extracting Requirements..." : "Analyze & Set Job"}
+						{isSubmitting ? "Creating Job..." : "Create & Review Requirements"}
 					</Button>
 				</div>
 			</form>

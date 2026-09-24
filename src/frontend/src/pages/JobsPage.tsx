@@ -125,10 +125,10 @@ export default function JobsPage() {
 
 							</div>
 
-							{/* Extracted criteria chips */}
+							{/* Basic stored metadata preview */}
 							<div className="space-y-2">
 								<div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-									Required Skills ({job.requirements.skills.length})
+									Initial Metadata Preview ({job.requirements.skills.length})
 								</div>
 								<div className="flex flex-wrap gap-1.5">
 									{job.requirements.skills.map((skill) => (

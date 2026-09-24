@@ -251,14 +251,24 @@ export async function matchCVToJob(jobId: string, cvId: string): Promise<MatchCV
 	return handleResponse<MatchCVResponse>(res);
 }
 
-export async function analyzeJob(jobId: string, cvIds: string[]): Promise<AIAnalysisResponse> {
+export async function getAIRequirements(jobId: string): Promise<AIRequirement[]> {
+	const res = await fetch(`/api/analysis/jobs/${jobId}/requirements`, { method: "POST" });
+	const data = await handleResponse<{ requirements: AIRequirement[] }>(res);
+	return data.requirements;
+}
+
+export async function analyzeJob(
+	jobId: string,
+	cvIds: string[],
+	requirements?: AIRequirement[],
+): Promise<AIAnalysisResponse> {
 	console.info(`[analysis] request started job=${jobId}`);
 	const res = await fetch(`/api/analysis/jobs/${jobId}`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
 		},
-		body: JSON.stringify({ cv_ids: cvIds }),
+		body: JSON.stringify({ cv_ids: cvIds, requirements }),
 	});
 	console.info(`[analysis] response received status=${res.status}`);
 	return handleResponse<AIAnalysisResponse>(res);

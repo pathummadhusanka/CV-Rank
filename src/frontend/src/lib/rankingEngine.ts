@@ -1,4 +1,4 @@
-import { analyzeJob, type AIAnalysisCandidate, type AIAssessmentClassification } from "@/lib/api";
+import { analyzeJob, type AIAnalysisCandidate, type AIAssessmentClassification, type AIRequirement } from "@/lib/api";
 import type { UploadedCandidate } from "@/components/CVUploader";
 import type { MatchClassification, RankedCandidate, RequirementMatch } from "@/types/ranking";
 
@@ -54,7 +54,8 @@ function mapCandidate(candidate: AIAnalysisCandidate): RankedCandidate {
 export async function evaluateCandidatesLive(
 	jobId: string,
 	candidates: UploadedCandidate[],
+	requirements: AIRequirement[],
 ): Promise<RankedCandidate[]> {
-	const analysis = await analyzeJob(jobId, candidates.map((candidate) => candidate.id));
+	const analysis = await analyzeJob(jobId, candidates.map((candidate) => candidate.id), requirements);
 	return analysis.candidates.map(mapCandidate);
 }

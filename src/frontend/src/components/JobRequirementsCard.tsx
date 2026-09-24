@@ -1,14 +1,34 @@
-import type { CreateJobResponse } from "@/lib/api";
+import type { AIRequirement, CreateJobResponse } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 
 interface JobRequirementsCardProps {
 	job: CreateJobResponse;
 	onReset: () => void;
+	requirements: AIRequirement[] | null;
+	isLoading: boolean;
+	error: string | null;
+	onRequirementsChange: (requirements: AIRequirement[]) => void;
 }
 
-export function JobRequirementsCard({ job, onReset }: JobRequirementsCardProps) {
-	const { requirements } = job;
-	const hasSkills = requirements.skills && requirements.skills.length > 0;
+export function JobRequirementsCard({ job, onReset, requirements, isLoading, error, onRequirementsChange }: JobRequirementsCardProps) {
+	const updateRequirement = (index: number, update: Partial<AIRequirement>) => {
+		if (!requirements) return;
+		onRequirementsChange(requirements.map((requirement, requirementIndex) =>
+			requirementIndex === index ? { ...requirement, ...update } : requirement,
+		));
+	};
+
+	const removeRequirement = (index: number) => {
+		if (!requirements) return;
+		onRequirementsChange(requirements.filter((_, requirementIndex) => requirementIndex !== index));
+	};
+
+	const addRequirement = () => {
+		onRequirementsChange([
+			...(requirements ?? []),
+			{ description: "", category: "skill", required: true, weight: 0.7 },
+		]);
+	};
 
 	return (
 		<div className="rounded-xl border border-border bg-card p-6 shadow-xs transition-all">
@@ -32,71 +52,42 @@ export function JobRequirementsCard({ job, onReset }: JobRequirementsCardProps) 
 				</Button>
 			</div>
 
-			<div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-				{/* Skills Card */}
-				<div className="sm:col-span-3 rounded-lg border border-border/80 bg-muted/30 p-3.5">
-					<div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2 flex items-center justify-between">
-						<span>Detected Skills ({requirements.skills.length})</span>
-						<span className="text-[11px] text-muted-foreground font-normal">Extracted from description</span>
+			<div className="mt-4 space-y-3 rounded-lg border border-border/80 bg-muted/30 p-4">
+				<div className="flex items-center justify-between gap-3">
+					<div>
+						<h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">Review AI-extracted requirements</h4>
+						<p className="mt-1 text-[11px] text-muted-foreground">These requirements are specific to this position. Edit them before evaluating candidates.</p>
 					</div>
-					{hasSkills ? (
-						<div className="flex flex-wrap gap-1.5">
-							{requirements.skills.map((skill) => (
-								<span
-									key={skill}
-									className="inline-flex items-center rounded-md bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 text-xs font-medium capitalize"
-								>
-									{skill}
-								</span>
-							))}
+					<Button variant="outline" size="sm" onClick={addRequirement} disabled={isLoading}>Add requirement</Button>
+				</div>
+				{isLoading && <p className="text-xs text-muted-foreground">Extracting requirements for this position...</p>}
+				{error && <p className="text-xs text-rose-700 dark:text-rose-300">{error}</p>}
+				{!isLoading && requirements && requirements.length === 0 && <p className="text-xs text-muted-foreground">Add at least one requirement before evaluating.</p>}
+				<div className="space-y-2">
+					{requirements?.map((requirement, index) => (
+						<div key={`${index}-${requirement.description}`} className="grid gap-2 rounded-md border border-border/70 bg-background p-3 md:grid-cols-[minmax(0,1fr)_9rem_8rem_auto] md:items-center">
+							<input
+								value={requirement.description}
+								onChange={(event) => updateRequirement(index, { description: event.target.value })}
+								placeholder="Requirement description"
+								className="rounded-md border border-input bg-background px-2.5 py-1.5 text-xs text-foreground"
+							/>
+							<input
+								value={requirement.category}
+								onChange={(event) => updateRequirement(index, { category: event.target.value })}
+								placeholder="Category"
+								className="rounded-md border border-input bg-background px-2.5 py-1.5 text-xs text-foreground"
+							/>
+							<label className="flex items-center gap-2 text-xs text-muted-foreground">
+								<input type="checkbox" checked={requirement.required} onChange={(event) => updateRequirement(index, { required: event.target.checked })} />
+								Required
+							</label>
+							<div className="flex items-center gap-2">
+								<input type="number" min="0.1" max="1" step="0.1" value={requirement.weight} onChange={(event) => updateRequirement(index, { weight: Number(event.target.value) })} className="w-20 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs text-foreground" aria-label="Requirement weight" />
+								<button type="button" onClick={() => removeRequirement(index)} className="text-xs font-semibold text-rose-600 hover:underline" aria-label={`Remove requirement ${index + 1}`}>Remove</button>
+							</div>
 						</div>
-					) : (
-						<p className="text-xs text-muted-foreground italic">
-							No predefined skills recognized in the description text.
-						</p>
-					)}
-				</div>
-
-				{/* Experience requirement */}
-				<div className="rounded-lg border border-border/80 bg-muted/30 p-3.5">
-					<div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-1">
-						Experience Required
-					</div>
-					<div className="text-sm font-semibold text-foreground">
-						{requirements.experience_years !== null ? (
-							<span className="text-emerald-600 dark:text-emerald-400 font-bold">
-								{requirements.experience_years}+ Years
-							</span>
-						) : (
-							<span className="text-muted-foreground font-normal">Not specified</span>
-						)}
-					</div>
-				</div>
-
-				{/* Education requirement */}
-				<div className="rounded-lg border border-border/80 bg-muted/30 p-3.5">
-					<div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-1">
-						Education Level
-					</div>
-					<div className="text-sm font-semibold text-foreground capitalize">
-						{requirements.education ? (
-							<span className="text-emerald-600 dark:text-emerald-400 font-bold">
-								{requirements.education}
-							</span>
-						) : (
-							<span className="text-muted-foreground font-normal">Not specified</span>
-						)}
-					</div>
-				</div>
-
-				{/* Status info */}
-				<div className="rounded-lg border border-border/80 bg-muted/30 p-3.5 flex flex-col justify-center">
-					<div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-1">
-						Matching Engine
-					</div>
-					<div className="text-xs text-muted-foreground">
-						Ready to match uploaded CVs against criteria
-					</div>
+					))}
 				</div>
 			</div>
 		</div>

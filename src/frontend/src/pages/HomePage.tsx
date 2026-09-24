@@ -12,7 +12,7 @@ import {
 	saveStoredProject,
 	type EvaluationProject,
 } from "@/lib/storage";
-import { getCVs, getJobs, type CreateJobResponse, type CVSummary } from "@/lib/api";
+import { getAIRequirements, getCVs, getJobs, type AIRequirement, type CreateJobResponse, type CVSummary } from "@/lib/api";
 import type { RankedCandidate } from "@/types/ranking";
 
 export default function HomePage() {
@@ -33,6 +33,9 @@ export default function HomePage() {
 	const [savedProjectName, setSavedProjectName] = useState("");
 	const [isProjectSaved, setIsProjectSaved] = useState(false);
 	const [projectJobAvailable, setProjectJobAvailable] = useState(true);
+	const [reviewedRequirements, setReviewedRequirements] = useState<AIRequirement[] | null>(null);
+	const [requirementsLoading, setRequirementsLoading] = useState(false);
+	const [requirementsError, setRequirementsError] = useState<string | null>(null);
 
 	useEffect(() => {
 		getCVs().then(setLibraryCVs).catch(() => setLibraryCVs([]));
@@ -52,6 +55,32 @@ export default function HomePage() {
 				setActiveJob(null);
 			});
 	}, []);
+
+	useEffect(() => {
+		if (!activeJob) {
+			setReviewedRequirements(null);
+			return;
+		}
+		let mounted = true;
+		setRequirementsLoading(true);
+		setRequirementsError(null);
+		getAIRequirements(activeJob.id)
+			.then((requirements) => {
+				if (mounted) setReviewedRequirements(requirements);
+			})
+			.catch((error) => {
+				if (mounted) {
+					setReviewedRequirements(null);
+					setRequirementsError(error instanceof Error ? error.message : "Could not extract job requirements.");
+				}
+			})
+			.finally(() => {
+				if (mounted) setRequirementsLoading(false);
+			});
+		return () => {
+			mounted = false;
+		};
+	}, [activeJob?.id]);
 
 	useEffect(() => {
 		const projectId = searchParams.get("projectId");
@@ -121,14 +150,18 @@ export default function HomePage() {
 	};
 
 	const handleRunEvaluation = async () => {
-		if (!activeJob || !projectJobAvailable || candidates.length === 0) return;
+		if (!activeJob || !projectJobAvailable || candidates.length === 0 || !reviewedRequirements?.length) return;
+		if (reviewedRequirements.some((requirement) => !requirement.description.trim())) {
+			setRequirementsError("Every requirement needs a description before evaluation.");
+			return;
+		}
 
 		setIsAnalyzing(true);
 		setAnalysisStatus("Sending candidates to the AI service...");
 		setAnalysisError(null);
 		setIsProjectSaved(false);
 		try {
-			const results = await evaluateCandidatesLive(activeJob.id, candidates);
+			const results = await evaluateCandidatesLive(activeJob.id, candidates, reviewedRequirements);
 			setAnalysisStatus("AI analysis completed.");
 			setRankedResults(results);
 			setSavedProjectName(`${activeJob.title} - Batch ${new Date().toLocaleDateString()}`);
@@ -249,7 +282,14 @@ export default function HomePage() {
 						</div>
 					</div>
 				) : (
-					<JobRequirementsCard job={activeJob} onReset={handleResetJob} />
+					<JobRequirementsCard
+						job={activeJob}
+						onReset={handleResetJob}
+						requirements={reviewedRequirements}
+						isLoading={requirementsLoading}
+						error={requirementsError}
+						onRequirementsChange={setReviewedRequirements}
+					/>
 				)}
 			</section>
 
@@ -296,8 +336,8 @@ export default function HomePage() {
 							{candidates.length} candidate CV{candidates.length === 1 ? "" : "s"} ready for {activeJob.title}.
 						</p>
 					</div>
-					<Button size="lg" onClick={handleRunEvaluation} disabled={isAnalyzing}>
-						{isAnalyzing ? "Analyzing with AI..." : "Run AI Candidate Analysis"}
+					<Button size="lg" onClick={handleRunEvaluation} disabled={isAnalyzing || requirementsLoading || !reviewedRequirements?.length}>
+						{isAnalyzing ? "Analyzing with AI..." : requirementsLoading ? "Preparing Requirements..." : "Run AI Candidate Analysis"}
 					</Button>
 					{analysisStatus && (
 						<p className="text-xs text-muted-foreground" role="status">{analysisStatus}</p>
