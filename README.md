@@ -1,4 +1,5 @@
 # CV-Rank MVP
+<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/3e01d81b-2539-480d-b2de-5ca73dd04999" />
 
 CV-Rank compares multiple candidate PDF CVs against one job description using a hybrid AI pipeline:
 
