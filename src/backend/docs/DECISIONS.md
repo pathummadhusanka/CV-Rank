@@ -29,10 +29,18 @@ Only record decisions that materially affect backend architecture, data behavior
 ## Hosted LLM for Semantic Assessment
 
 - **Date:** 2026-09-24
+- **Status:** Superseded by Hybrid Semantic Matching
+- **Decision:** Use OpenRouter as the hosted, OpenAI-compatible LLM API for job requirement extraction, CV understanding, ambiguous semantic reasoning, and evidence generation. Start with `openai/gpt-4o-mini`; keep the model configurable.
+- **Reason:** The LLM is useful for language understanding and structured extraction, but it should not be the only semantic matching mechanism.
+- **Impact:** LLM outputs must be validated before scoring, and provider failures must produce controlled API errors. Keyword-only matching is not an acceptable fallback for successful analysis.
+
+## Hybrid Semantic Matching
+
+- **Date:** 2026-09-24
 - **Status:** Accepted
-- **Decision:** Use OpenRouter as the hosted, OpenAI-compatible LLM API for job requirement extraction, CV understanding, requirement-level matching, and evidence generation. Start with `openai/gpt-4o-mini`; keep the model configurable. Do not train or fine-tune a model for the MVP, and defer embeddings.
-- **Reason:** The assignment requires AI-based scoring and semantic matching, while the project has no labeled training dataset. A hosted LLM meets the requirement without introducing a training pipeline.
-- **Impact:** The OpenRouter provider, model, and API key are runtime configuration. AI outputs must be validated before scoring, and provider failures must produce controlled API errors. Keyword-only matching is not an acceptable fallback for successful analysis.
+- **Decision:** Use embeddings for semantic similarity between job requirements and meaningful CV sections, use the LLM for extraction and ambiguous reasoning, and use deterministic Python code for the final weighted score and ranking.
+- **Reason:** This demonstrates a genuine ML matching component while keeping the final score reproducible, explainable, configurable, and testable.
+- **Impact:** MVP embeddings are calculated in memory per analysis; no vector database, model training, or fine-tuning is required. Score weights are required skills 40%, preferred skills 15%, experience 25%, and semantic similarity 20%.
 
 ## Isolated Database for Automated Tests
 

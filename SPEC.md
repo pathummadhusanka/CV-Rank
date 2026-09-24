@@ -37,7 +37,7 @@ The user can:
 * PDF CV processing
 * AI-based requirement extraction
 * AI-based semantic CV matching
-* AI-derived requirement scoring with deterministic aggregation
+* Hybrid AI matching using LLM extraction, embeddings, and deterministic aggregation
 * Candidate ranking
 * Score breakdown
 * Evidence and explanation
@@ -122,13 +122,25 @@ The application maps the validated AI classifications to numeric match values:
 * No evidence: 0.0
 * Contradictory evidence: 0.0
 
-The score is calculated by application code using the requirement weights.
+The MVP uses these score components:
+
+* Required skill match: 40%
+* Preferred skill match: 15%
+* Experience match: 25%
+* Semantic similarity: 20%
+
+The score is calculated by application code using validated AI outputs and embedding similarities.
 
 ```text
-score = sum(weight × AI match value) / sum(weights) × 100
+score = (
+	required_skill_score × 0.40
+	+ preferred_skill_score × 0.15
+	+ experience_score × 0.25
+	+ semantic_similarity_score × 0.20
+)
 ```
 
-The AI determines the requirement-level match classification and evidence. Application code validates those results, performs the weighted aggregation, and owns the final ranking. The AI must not be asked to invent or directly return the final aggregate score.
+The LLM determines structured requirements, candidate information, ambiguous semantic relationships, and evidence. Embeddings provide semantic similarity between requirements and relevant CV sections. Application code validates those results, performs the weighted aggregation, and owns the final ranking. No model is asked to invent or directly return the final aggregate score.
 
 ## 9. Ranking
 
@@ -147,7 +159,9 @@ AI is responsible for:
 * Match classification
 * Evidence and explanations
 
-The first implementation uses one hosted, structured-output-capable language model for these tasks. Model and provider configuration are supplied through environment variables. No model training or fine-tuning is required. Embeddings are deferred unless later scale or retrieval needs justify them.
+The first implementation uses a hosted, structured-output-capable language model for extraction and ambiguous reasoning, plus an embedding model for semantic similarity. Model and provider configuration are supplied through environment variables. Embeddings are calculated in memory for the MVP; no vector database, model training, or fine-tuning is required.
+
+The system must compare meaningful CV sections or chunks against relevant job requirements rather than embedding an entire CV as one undifferentiated document.
 
 Application code is responsible for:
 
@@ -170,6 +184,7 @@ The system should handle:
 * CV extraction failures
 * AI/API failures
 * Invalid AI responses
+* Embedding API failures
 * Missing AI API keys
 * AI timeouts, rate limits, and provider failures
 

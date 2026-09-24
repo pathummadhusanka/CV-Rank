@@ -6,47 +6,38 @@ Deliver the smallest honest, locally runnable CV scoring application that satisf
 
 1. A hiring manager enters one job description.
 2. The hiring manager uploads multiple PDF CVs.
-3. A hosted LLM analyzes the job and CVs through OpenRouter.
-4. The backend returns AI-backed requirement matches, evidence, scores, and ranking.
-5. The browser displays the ranked candidates and explains each score.
-6. The whole application runs from one Docker Compose command with the API key supplied at runtime.
+3. A hosted LLM and embedding model analyze the job and CVs.
+4. The backend returns AI-backed matches, evidence, scores, and ranking.
+5. The browser displays ranked candidates and explains each score.
+6. The full application runs with one Docker Compose command and a runtime API key.
 
-The MVP does not train or fine-tune a model. It does not use keyword-only matching as a successful analysis path.
+The MVP does not train or fine-tune a model. Keyword-only matching is not a successful analysis path.
 
 ## Current State
 
-### Backend
+### Backend implemented
 
-Implemented:
+- FastAPI health, job, CV, matching, and ranking endpoints.
+- PDF upload, text extraction, SQLite persistence, and storage volume configuration.
+- Rule-based parser/matcher/scorer used by the current prototype.
+- Typed API responses and isolated SQLite tests.
+- AI schemas, provider protocol, mock provider, OpenRouter settings, and process records.
+- Backend Dockerfile and Compose configuration.
 
-- FastAPI application with health, job, CV, matching, and ranking endpoints.
-- PDF upload, text extraction, SQLite persistence, and named Docker storage volume.
-- Rule-based parser, matcher, scorer, and ranking used by the current prototype.
-- Typed API response models and isolated SQLite test fixtures.
-- AI schemas, provider protocol, mock provider, OpenRouter runtime settings, and prompt/process documentation.
-- Dockerfile and backend Compose configuration.
+### Frontend implemented
 
-Missing for the MVP:
+- React/Vite job creation, CV upload, leaderboard, evidence modal, health status, and CSV export.
+- Backend development proxy and recruiter-oriented components.
 
-- Real OpenRouter provider adapter.
-- AI-backed requirement extraction and candidate assessment service.
-- AI-derived evidence, strengths, gaps, and explanations in API responses.
-- Provider failure handling and end-to-end AI tests.
+### Main gaps
 
-### Frontend
-
-Implemented:
-
-- React/Vite recruiter workflow for job creation, CV upload, ranking display, evidence modal, health status, and CSV export.
-- Backend development proxy and components for requirements, uploading, leaderboard, and evidence.
-
-Missing or unsafe for the MVP:
-
-- The frontend calls the per-CV matching endpoint instead of the backend job-level ranking endpoint.
-- `rankingEngine.ts` fabricates evidence and fallback results from keyword matches.
-- Backend/API failures must not be presented as successful candidate analysis.
-- Frontend and backend are not yet combined into one runnable Docker Compose stack.
-- The frontend README is not yet a non-technical user manual.
+- No real OpenRouter LLM adapter.
+- No embedding adapter or in-memory similarity service.
+- No AI analysis endpoint using validated AI results.
+- Current frontend ranking engine fabricates evidence and can fall back after API failure.
+- Frontend calls per-CV matching instead of the backend job-level analysis workflow.
+- Frontend and backend are not combined into one root Docker Compose stack.
+- User manual and actual prompts need completion.
 
 ## Target Architecture
 
@@ -54,156 +45,169 @@ Missing or unsafe for the MVP:
 Browser
   -> Frontend
       -> POST /analysis/jobs/{job_id}
-          -> Backend loads job and CV text
-          -> OpenRouter LLM extracts weighted requirements
-          -> OpenRouter LLM assesses every requirement for every CV
-          -> Pydantic validates the structured AI response
-          -> Python maps classifications to values
-          -> Python calculates weighted scores and ranks candidates
+          -> Extract job requirements with LLM
+          -> Structure CV text into meaningful sections/chunks
+          -> Embed requirements and relevant CV chunks
+          -> Calculate semantic similarity
+          -> Ask LLM to resolve ambiguous matches and provide evidence
+          -> Validate all structured AI results
+          -> Calculate weighted scores in Python
+          -> Rank candidates in Python
       <- Ranked candidates, evidence, strengths, gaps, explanation
 ```
 
-### Model Decision
+### Model decision
 
-- Provider: OpenRouter.
-- API style: OpenAI-compatible HTTP API.
-- Initial model: configurable, default `openai/gpt-4o-mini`.
-- Credentials: `AI_API_KEY` supplied at runtime only.
-- Local tests: mock provider; no network or API key required.
-- Embeddings: deferred for this MVP.
-- Custom training/fine-tuning: out of scope.
+- LLM provider: OpenRouter.
+- LLM API: OpenAI-compatible API.
+- Initial LLM: configurable, default `openai/gpt-4o-mini`.
+- Embedding provider: configurable OpenAI-compatible embeddings API.
+- Initial embedding model: configurable, default `openai/text-embedding-3-small`.
+- API key: `AI_API_KEY`, supplied at runtime only.
+- Embeddings: calculated in memory per analysis; no vector database.
+- Training and fine-tuning: out of scope.
+- Tests: mock LLM and embedding providers; no network required.
 
-The LLM owns semantic understanding, requirement-level classifications, and evidence. Python owns validation, weighted aggregation, and deterministic ranking.
+The LLM handles extraction, normalization, ambiguous reasoning, and evidence. Embeddings handle semantic similarity. Python validates outputs, calculates the final score, and ranks candidates.
+
+## Score Method
+
+The MVP score is calculated in application code:
+
+- Required skills: 40%
+- Preferred skills: 15%
+- Experience: 25%
+- Semantic similarity: 20%
+
+LLM classifications map to values:
+
+- `strong_match`: `1.0`
+- `partial_match`: `0.5`
+- `no_evidence`: `0.0`
+- `contradictory_evidence`: `0.0`
+
+The LLM never returns the final aggregate score.
 
 ## Milestones
 
-### 1. OpenRouter Adapter
+### 1. LLM and Embedding Adapters
 
-Implement `OpenRouterProvider` behind the existing `AIProvider` protocol.
+Implement provider adapters behind the existing AI boundary.
 
 Required behavior:
 
-- Send structured prompts and request JSON output.
-- Use `AI_BASE_URL`, `AI_MODEL`, `AI_API_KEY`, timeout, and optional attribution headers.
+- Send structured prompts and parse validated JSON from OpenRouter.
+- Request embeddings for requirements and relevant CV chunks.
+- Use configurable provider, model, base URL, timeout, and attribution headers.
 - Fail clearly when the API key is missing.
-- Translate timeout, HTTP, rate-limit, and malformed-response errors into controlled application errors.
-- Never log API keys or full candidate CV text.
+- Handle timeout, HTTP, rate-limit, malformed-response, and embedding failures.
+- Never log credentials or full CV text.
 
 Acceptance checks:
 
-- Mocked successful response becomes validated `AIJobAnalysis` or `AICandidateAssessment`.
-- Invalid JSON and invalid classifications are rejected.
-- Provider errors produce stable application errors.
+- Mocked responses become validated AI objects.
+- Invalid JSON and classifications are rejected.
+- Embedding vectors are validated and cosine similarity is bounded.
+- Provider failures become stable application errors.
 
 ### 2. AI Analysis Service
 
-Create one service that performs the complete job analysis:
+Create one service that:
 
-1. Validate the job description and candidate text.
-2. Extract weighted requirements with the LLM.
-3. Assess every requirement against every CV.
-4. Require one assessment per requirement.
-5. Require evidence for positive matches where available.
-6. Map classifications:
-   - `strong_match = 1.0`
-   - `partial_match = 0.5`
-   - `no_evidence = 0.0`
-   - `contradictory_evidence = 0.0`
-7. Calculate weighted scores in Python.
-8. Rank candidates deterministically.
-9. Return strengths, gaps, evidence, and a short explanation.
+1. Validates the job description and candidate text.
+2. Extracts weighted required and preferred requirements with the LLM.
+3. Splits CVs into meaningful sections or chunks.
+4. Embeds requirements and relevant CV chunks in memory.
+5. Calculates semantic similarity.
+6. Uses the LLM for ambiguous relationships and evidence.
+7. Requires exactly one assessment per requirement.
+8. Requires evidence for positive matches where available.
+9. Calculates the four weighted score components.
+10. Calculates the final score and deterministic rank in Python.
+11. Returns strengths, gaps, evidence, and explanation.
 
-Do not silently fall back to keyword-only matching when the AI provider fails.
+There is no silent keyword-only fallback when AI analysis fails.
 
-### 3. Analysis API Contract
+### 3. Analysis API
 
-Add the core endpoint:
+Add:
 
 ```text
 POST /analysis/jobs/{job_id}
 ```
 
-The response should include:
+The response includes:
 
-- Job ID and analyzed requirement list.
+- Job and extracted requirements.
 - Candidate ID, filename, and rank.
-- Overall score from `0` to `100`.
-- Requirement-level classification and evidence.
-- Strengths and gaps.
-- Short explanation.
-- Analysis status and controlled failure details when appropriate.
+- Component and overall scores.
+- Requirement-level classifications.
+- Semantic similarity signals.
+- Evidence, strengths, gaps, and explanation.
+- Controlled analysis failure status when provider processing fails.
 
-The existing rule-based endpoints may remain temporarily for development compatibility, but the frontend MVP must use the AI analysis endpoint.
+The old rule-based endpoints may remain temporarily for compatibility, but the MVP frontend must use this endpoint.
 
 ### 4. Frontend Integration
 
-Replace client-side ranking and fabricated evidence with the backend analysis contract.
+- Add the analysis request to `src/frontend/src/lib/api.ts`.
+- Submit one job and the uploaded CV batch to the backend.
+- Render backend rank, scores, evidence, strengths, and gaps.
+- Remove fabricated evidence and successful-looking fallback behavior from `rankingEngine.ts`.
+- Show explicit loading, empty, partial-failure, and provider-error states.
+- Keep upload validation and progress feedback.
 
-Required changes:
+### 5. Single Compose Runtime
 
-- Add the analysis API call to `src/frontend/src/lib/api.ts`.
-- Submit one job and all uploaded CVs through the backend workflow.
-- Render backend rank, score, evidence, strengths, and gaps.
-- Remove the successful-looking fallback in `rankingEngine.ts`.
-- Show an explicit error state when analysis fails.
-- Preserve upload progress and per-file validation feedback.
-
-### 5. Single-Container Runtime
-
-Provide one root Compose workflow that starts the frontend and backend together.
+Create a root Compose workflow for frontend and backend.
 
 Required behavior:
 
-- Frontend can reach backend by Compose service name.
-- Backend can reach OpenRouter using runtime environment variables.
+- Frontend reaches backend by Compose service name.
+- Backend reaches OpenRouter through runtime environment variables.
 - SQLite and uploaded CVs use a named volume.
-- API keys are not copied into the image or committed to Git.
-- `docker compose up --build` starts the browser-usable application.
-- Healthcheck confirms backend availability.
+- API keys are not copied into the image or committed.
+- `docker compose up --build` starts the browser-usable app.
+- Backend healthcheck is used by the frontend dependency.
 
-### 6. User Documentation and Process Trail
+### 6. Documentation and Process Trail
 
-Update:
+Complete:
 
-- Root `README.md` with fresh-clone setup and non-technical user instructions.
-- Backend README with runtime AI configuration.
-- `docs/PROMPTS.md` with the actual extraction and assessment prompts.
-- `docs/WORKLOG.md` with milestone outcomes and evidence.
-- `docs/DECISIONS.md` with only major architectural choices.
+- Root README with fresh-clone setup and non-technical user instructions.
+- Backend README with AI runtime configuration.
+- `docs/PROMPTS.md` with the actual extraction, assessment, and ambiguity prompts.
+- `docs/WORKLOG.md` with milestone evidence.
+- `docs/DECISIONS.md` with major architectural decisions only.
 
 ## Testing Plan
 
-### Backend unit tests
+### Backend
 
 - AI schema validation and classification mapping.
-- Requirement coverage: every requirement receives exactly one assessment.
-- Weighted score calculation and ranking.
-- OpenRouter adapter with mocked HTTP responses.
-- Missing key, timeout, rate limit, invalid JSON, and provider failure.
+- Requirement coverage: exactly one assessment per requirement.
+- Chunking and cosine similarity.
+- Component score calculation and deterministic ranking.
+- Mocked OpenRouter LLM and embedding responses.
+- Missing key, timeout, rate limit, invalid JSON, and provider failures.
+- Successful analysis, missing job, empty CV batch, and partial provider failure.
+- No fabricated output after an AI failure.
 
-### Backend API tests
-
-- Successful AI analysis with a mock provider.
-- Missing job and missing CV handling.
-- Empty CV batch handling.
-- AI failure returns a controlled error and never fabricated results.
-
-### Frontend checks
+### Frontend
 
 - Job creation and multiple PDF upload.
-- Loading, success, empty, and failure states.
-- Backend AI results render without client-side re-ranking.
+- Analysis loading, success, empty, partial-failure, and failure states.
+- Backend results render without client-side re-ranking.
 - Evidence modal displays only backend-provided evidence.
 
-### End-to-end smoke test
+### End-to-end
 
 - Start with `docker compose up --build`.
-- Open the browser application.
-- Enter a job description.
-- Upload at least two synthetic PDFs.
-- Run analysis with a runtime OpenRouter key.
-- Confirm ranked results and evidence.
-- Confirm invalid PDF and provider failure states.
+- Open the browser app.
+- Enter a job description and upload at least two synthetic PDFs.
+- Run analysis using a runtime OpenRouter key.
+- Confirm ranked results, component scores, and evidence.
+- Confirm invalid PDF and provider failure behavior.
 
 ## MVP Exclusions
 
@@ -212,22 +216,24 @@ Do not implement before the core flow works:
 - User accounts or authentication.
 - Candidate communication or interview scheduling.
 - Fine-tuning or custom model training.
-- Embedding search or vector databases.
+- Persistent vector databases.
 - Advanced analytics and dashboards.
-- Pagination, filtering, or bulk administration.
+- Pagination and filtering.
 - Background job queues.
 - Production-grade multi-tenant deployment.
 
 ## Definition Of Done
 
-The MVP is complete when:
+- A fresh clone runs the full app with the documented Compose command.
+- The API key is read at runtime and never stored in the repository or image.
+- A job and multiple synthetic CVs produce LLM-backed extraction, embedding similarity, classifications, evidence, scores, and ranking.
+- Final scores are calculated by validated, deterministic Python code.
+- The frontend displays backend results without fabricating evidence or silently falling back to keywords.
+- Provider failures are controlled and covered by tests.
+- SPEC, README, WORKLOG, DECISIONS, and PROMPTS describe the implementation that actually runs.
+---
+noteId: "3a3ffdd0b7b211f1b7d36fb7948e8c50"
+tags: []
 
-- A fresh clone can run the full app using the documented Docker Compose command.
-- The runtime API key is read from environment variables and never stored in the repository or image.
-- A job plus multiple synthetic CVs produces AI-backed classifications and evidence.
-- Scores are calculated from validated AI classifications and ranked by backend code.
-- The frontend displays the backend results without fabricating evidence or silently falling back to keyword matching.
-- Provider failures are visible, controlled, and covered by tests.
-- The specification, README, worklog, decisions, and prompts describe the implementation that actually runs.
-
+---
 
