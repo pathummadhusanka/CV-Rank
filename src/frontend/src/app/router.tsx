@@ -4,6 +4,7 @@ import RootLayout from "../layouts/RootLayout";
 import DashboardPage from "../pages/DashboardPage";
 import HomePage from "../pages/HomePage";
 import JobsPage from "../pages/JobsPage";
+import CVLibraryPage from "../pages/CVLibraryPage";
 import NotFoundPage from "../pages/NotFoundPage";
 
 export const router = createBrowserRouter([
@@ -18,6 +19,10 @@ export const router = createBrowserRouter([
 			{
 				path: "jobs",
 				Component: JobsPage,
+			},
+			{
+				path: "cvs",
+				Component: CVLibraryPage,
 			},
 			{
 				path: "dashboard",

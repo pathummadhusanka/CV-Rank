@@ -53,8 +53,8 @@ function mapCandidate(candidate: AIAnalysisCandidate): RankedCandidate {
 
 export async function evaluateCandidatesLive(
 	jobId: string,
-	_candidates: UploadedCandidate[],
+	candidates: UploadedCandidate[],
 ): Promise<RankedCandidate[]> {
-	const analysis = await analyzeJob(jobId);
+	const analysis = await analyzeJob(jobId, candidates.map((candidate) => candidate.id));
 	return analysis.candidates.map(mapCandidate);
 }

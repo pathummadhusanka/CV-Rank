@@ -2,6 +2,7 @@ import logging
 from time import perf_counter
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.ai.analysis_service import AIAnalysisService, CandidateDocument
@@ -13,12 +14,17 @@ from app.db.database import get_session
 from app.db.models import CV, Job
 
 router = APIRouter(prefix="/analysis", tags=["Analysis"])
+
+
+class AnalysisRequest(BaseModel):
+    cv_ids: list[str] | None = None
 logger = logging.getLogger("cv_rank.analysis")
 
 
 @router.post("/jobs/{job_id}", response_model=AIAnalysisResult)
 def analyze_job(
     job_id: str,
+    data: AnalysisRequest | None = None,
     session: Session = Depends(get_session),
     provider: AIProvider = Depends(get_ai_provider),
 ) -> AIAnalysisResult:
@@ -29,9 +35,13 @@ def analyze_job(
         logger.warning("analysis job_not_found job_id=%s", job_id)
         raise HTTPException(status_code=404, detail="Job not found")
 
+    cv_query = session.query(CV)
+    if data and data.cv_ids is not None:
+        cv_query = cv_query.filter(CV.id.in_(data.cv_ids))
+
     candidates = [
         CandidateDocument(cv.id, cv.filename, cv.extracted_text)
-        for cv in session.query(CV).order_by(CV.id).all()
+        for cv in cv_query.order_by(CV.id).all()
     ]
     logger.info("analysis inputs job_id=%s candidates=%s", job_id, len(candidates))
 

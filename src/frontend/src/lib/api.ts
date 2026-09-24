@@ -28,6 +28,16 @@ export interface UploadCVResponse {
 	status: string;
 }
 
+export interface CVSummary {
+	id: string;
+	filename: string;
+	skills: string;
+	experience_years: number | null;
+	education: string | null;
+	status: string;
+	created_at: string;
+}
+
 export interface AIRequirement {
 	description: string;
 	category: string;
@@ -161,6 +171,11 @@ export async function uploadCV(file: File): Promise<UploadCVResponse> {
 	return handleResponse<UploadCVResponse>(res);
 }
 
+export async function getCVs(): Promise<CVSummary[]> {
+	const res = await fetch("/api/cvs");
+	return handleResponse<CVSummary[]>(res);
+}
+
 export async function matchCVToJob(jobId: string, cvId: string): Promise<MatchCVResponse> {
 	const res = await fetch(`/api/matching/jobs/${jobId}/cvs/${cvId}`, {
 		method: "POST",
@@ -168,10 +183,14 @@ export async function matchCVToJob(jobId: string, cvId: string): Promise<MatchCV
 	return handleResponse<MatchCVResponse>(res);
 }
 
-export async function analyzeJob(jobId: string): Promise<AIAnalysisResponse> {
+export async function analyzeJob(jobId: string, cvIds: string[]): Promise<AIAnalysisResponse> {
 	console.info(`[analysis] request started job=${jobId}`);
 	const res = await fetch(`/api/analysis/jobs/${jobId}`, {
 		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({ cv_ids: cvIds }),
 	});
 	console.info(`[analysis] response received status=${res.status}`);
 	return handleResponse<AIAnalysisResponse>(res);

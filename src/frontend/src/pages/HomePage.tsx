@@ -14,12 +14,15 @@ import {
 	saveStoredProject,
 	type EvaluationProject,
 } from "@/lib/storage";
-import type { CreateJobResponse } from "@/lib/api";
+import { getCVs, type CreateJobResponse, type CVSummary } from "@/lib/api";
 import type { RankedCandidate } from "@/types/ranking";
 
 export default function HomePage() {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const [storedJobs, setStoredJobs] = useState<CreateJobResponse[]>(() => getStoredJobs());
+	const [libraryCVs, setLibraryCVs] = useState<CVSummary[]>([]);
+	const [selectedLibraryIds, setSelectedLibraryIds] = useState<string[]>([]);
+	const [uploadedCandidates, setUploadedCandidates] = useState<UploadedCandidate[]>([]);
 	const [activeJob, setActiveJob] = useState<CreateJobResponse | null>(null);
 	const [showNewJobForm, setShowNewJobForm] = useState(false);
 	const [analysisError, setAnalysisError] = useState<string | null>(null);
@@ -30,6 +33,10 @@ export default function HomePage() {
 	const [analysisStatus, setAnalysisStatus] = useState<string | null>(null);
 	const [savedProjectName, setSavedProjectName] = useState("");
 	const [isProjectSaved, setIsProjectSaved] = useState(false);
+
+	useEffect(() => {
+		getCVs().then(setLibraryCVs).catch(() => setLibraryCVs([]));
+	}, []);
 
 	useEffect(() => {
 		const projectId = searchParams.get("projectId");
@@ -59,6 +66,8 @@ export default function HomePage() {
 		setSearchParams({ jobId: job.id });
 		setShowNewJobForm(false);
 		setCandidates([]);
+		setUploadedCandidates([]);
+		setSelectedLibraryIds([]);
 		setRankedResults([]);
 		setAnalysisError(null);
 		setIsProjectSaved(false);
@@ -69,6 +78,24 @@ export default function HomePage() {
 		setActiveJob(newJob);
 		setSearchParams({ jobId: newJob.id });
 		setShowNewJobForm(false);
+		setAnalysisError(null);
+		setIsProjectSaved(false);
+		setCandidates([]);
+		setUploadedCandidates([]);
+		setSelectedLibraryIds([]);
+	};
+
+	const handleLibrarySelection = (cvId: string, selected: boolean) => {
+		const nextIds = selected
+			? [...selectedLibraryIds, cvId]
+			: selectedLibraryIds.filter((id) => id !== cvId);
+		const selectedCandidates: UploadedCandidate[] = libraryCVs
+			.filter((cv) => nextIds.includes(cv.id))
+			.map((cv) => ({ id: cv.id, filename: cv.filename, size: 0 }));
+
+		setSelectedLibraryIds(nextIds);
+		setCandidates([...selectedCandidates, ...uploadedCandidates]);
+		setRankedResults([]);
 		setAnalysisError(null);
 		setIsProjectSaved(false);
 	};
@@ -115,7 +142,11 @@ export default function HomePage() {
 	};
 
 	const handleCandidatesChange = (updated: UploadedCandidate[]) => {
-		setCandidates(updated);
+		setUploadedCandidates(updated);
+		const selectedCandidates: UploadedCandidate[] = libraryCVs
+			.filter((cv) => selectedLibraryIds.includes(cv.id))
+			.map((cv) => ({ id: cv.id, filename: cv.filename, size: 0 }));
+		setCandidates([...selectedCandidates, ...updated]);
 		setRankedResults([]);
 		setAnalysisError(null);
 		setIsProjectSaved(false);
@@ -125,6 +156,8 @@ export default function HomePage() {
 		setActiveJob(null);
 		setSearchParams({});
 		setCandidates([]);
+		setUploadedCandidates([]);
+		setSelectedLibraryIds([]);
 		setRankedResults([]);
 		setSelectedCandidate(null);
 		setAnalysisError(null);
@@ -200,6 +233,34 @@ export default function HomePage() {
 			</section>
 
 			<section>
+				{activeJob && (
+					<div className="mb-4 rounded-xl border border-border bg-card p-6 shadow-xs">
+						<div className="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
+							<div>
+								<h3 className="text-base font-bold text-foreground">Choose From CV Library</h3>
+								<p className="text-xs text-muted-foreground">Reuse previously uploaded CVs for this evaluation.</p>
+							</div>
+							<NavLink to="/cvs" className="text-xs font-semibold text-primary hover:underline">Open CV Library</NavLink>
+						</div>
+						{libraryCVs.length === 0 ? (
+							<p className="pt-4 text-xs text-muted-foreground">No stored CVs yet. Upload one below.</p>
+						) : (
+							<div className="grid grid-cols-1 gap-2 pt-4 sm:grid-cols-2">
+								{libraryCVs.map((cv) => (
+									<label key={cv.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/80 p-3 hover:bg-muted/30">
+										<input
+											type="checkbox"
+											checked={selectedLibraryIds.includes(cv.id)}
+											onChange={(event) => handleLibrarySelection(cv.id, event.target.checked)}
+										/>
+										<span className="min-w-0 truncate text-xs font-medium text-foreground">{cv.filename}</span>
+									</label>
+								))}
+							</div>
+						)}
+					</div>
+				)}
+
 				<CVUploader onCandidatesChange={handleCandidatesChange} disabled={!activeJob} />
 			</section>
 

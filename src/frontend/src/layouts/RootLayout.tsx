@@ -47,6 +47,19 @@ export default function RootLayout() {
 								Jobs Library
 							</NavLink>
 							<NavLink
+								to="/cvs"
+								className={({ isActive }) =>
+									cn(
+										"px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+										isActive
+											? "bg-secondary text-secondary-foreground font-semibold"
+											: "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+									)
+								}
+							>
+								CV Library
+							</NavLink>
+							<NavLink
 								to="/dashboard"
 								className={({ isActive }) =>
 									cn(

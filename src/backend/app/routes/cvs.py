@@ -88,6 +88,19 @@ async def upload_cv(
     
     candidate = parse_candidate(text)
 
+    existing_cv = (
+        session.query(CV)
+        .filter(CV.filename == (file.filename or "unknown.pdf"), CV.extracted_text == text)
+        .first()
+    )
+    if existing_cv:
+        file_path.unlink(missing_ok=True)
+        return {
+            "id": existing_cv.id,
+            "filename": existing_cv.filename,
+            "status": "already_processed",
+        }
+
     create_cv(
         session=session,
         cv_id=cv_id,
