@@ -72,6 +72,7 @@ The application shows an error when the AI provider is unavailable. It does not 
 - [Available Features](docs/FEATURES.md) - implemented features and explicit exclusions.
 - [Architecture](docs/ARCHITECTURE.md) - system flow, AI boundaries, and code areas.
 - [Developer Guide](docs/DEVELOPER_GUIDE.md) - local development, Docker, testing, and contribution workflow.
+- [Environment Configuration](docs/ENVIRONMENT.md) - every `.env` variable and its purpose.
 - [Backend worklog](src/backend/docs/WORKLOG.md) - milestone history.
 - [Backend decisions](src/backend/docs/DECISIONS.md) - major architectural decisions.
 - [Prompt record](src/backend/docs/PROMPTS.md) - AI prompt contracts.

@@ -41,7 +41,7 @@ The Vite proxy forwards `/api` requests to the local backend.
 
 ## AI Configuration
 
-Copy `.env.example` to `.env` and set `AI_API_KEY` for OpenRouter. The LLM model and local embedding model are configurable. Tests use mock providers and do not require a key.
+Copy `.env.example` to `.env` and set `AI_API_KEY` for OpenRouter. See [ENVIRONMENT.md](ENVIRONMENT.md) for every variable, defaults, and security rules. The LLM model and local embedding model are configurable. Tests use mock providers and do not require a key.
 
 Never commit `.env`, API keys, real CVs, or personally identifying test data.
 
