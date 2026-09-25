@@ -113,6 +113,7 @@ export interface AIAnalysisCandidate {
 	required_skill_score: number;
 	preferred_skill_score: number;
 	experience_score: number;
+	project_score?: number;
 	semantic_similarity_score: number;
 	overall_score: number;
 	matches: AIRequirementMatch[];

@@ -114,7 +114,7 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 							<div className="text-xs font-semibold text-foreground uppercase tracking-wider">
 								Hybrid AI Scoring Formula
 							</div>
-							<div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+							<div className={`grid grid-cols-2 ${candidate.scoreBreakdown.projects !== undefined ? "sm:grid-cols-5" : "sm:grid-cols-4"} gap-2 text-center`}>
 								<div className="bg-background rounded-md p-2 border border-border/60">
 									<span className="text-[10px] text-muted-foreground uppercase block font-medium">
 										Required Skills (40%)
@@ -147,6 +147,16 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 										{candidate.scoreBreakdown.semanticSimilarity}%
 									</span>
 								</div>
+								{candidate.scoreBreakdown.projects !== undefined && (
+									<div className="bg-background rounded-md p-2 border border-border/60">
+										<span className="text-[10px] text-muted-foreground uppercase block font-medium">
+											Projects
+										</span>
+										<span className="text-sm font-bold text-foreground">
+											{candidate.scoreBreakdown.projects}%
+										</span>
+									</div>
+								)}
 							</div>
 						</div>
 					) : candidate.scores && (
@@ -253,7 +263,7 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 											<span className="text-xs font-semibold text-foreground capitalize">
 												{item.requirement}
 											</span>
-											<span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground">
+											<span className={`text-[10px] uppercase font-mono px-1.5 py-0.2 rounded ${item.category === "projects" ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-semibold" : "bg-muted text-muted-foreground"}`}>
 												{item.category}
 											</span>
 										</div>

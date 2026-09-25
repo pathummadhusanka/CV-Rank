@@ -18,6 +18,7 @@ function mapClassification(classification: AIAssessmentClassification): MatchCla
 
 function mapCategory(category: string): RequirementMatch["category"] {
 	const normalized = category.toLowerCase();
+	if (normalized.includes("project") || normalized.includes("portfolio")) return "projects";
 	if (normalized.includes("experience")) return "experience";
 	if (normalized.includes("education")) return "education";
 	return "skill";
@@ -45,6 +46,7 @@ function mapCandidate(candidate: AIAnalysisCandidate): RankedCandidate {
 			preferredSkills: candidate.preferred_skill_score,
 			experience: candidate.experience_score,
 			semanticSimilarity: candidate.semantic_similarity_score,
+			projects: candidate.project_score,
 		},
 		strengths: candidate.strengths,
 		gaps: candidate.gaps,

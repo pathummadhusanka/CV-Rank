@@ -255,7 +255,7 @@ class OpenRouterProvider:
     def extract_requirements(self, job_description: str) -> AIJobAnalysis:
         payload = self._request_json(
             "extract_requirements",
-            "Extract job-relevant required and preferred requirements into 4 clear categories: 'skill', 'experience', 'domain', or 'education'. "
+            "Extract job-relevant required and preferred requirements into 5 clear categories: 'skill', 'experience', 'projects', 'domain', or 'education'. "
             "Return JSON with a requirements array. Each item must contain "
             "description, category, required, and weight (float between 0.1 and 1.0). Do not invent requirements.",
             job_description,
@@ -297,7 +297,7 @@ class OpenRouterProvider:
             "Return JSON with an assessments array that assesses every supplied requirement against the CV. "
             "Each array item must contain requirement, classification, evidence, and reasoning. Use exactly one "
             "classification: strong_match, partial_match, no_evidence, or "
-            "contradictory_evidence. Evidence must be verbatim text quotes copied directly from the CV text with section context where applicable (e.g. '[Work Experience] 3 years developing Python APIs'). Reasoning must be a concise 1-sentence explanation of why the classification was given. Evidence must always be a JSON array of strings.",
+            "contradictory_evidence. Evidence must be verbatim text quotes copied directly from the CV text with section context where applicable (e.g. '[Project Experience] Built containerized REST API with Docker & FastAPI' or '[Work Experience] 3 years developing Python APIs'). Reasoning must be a concise 1-sentence explanation of why the classification was given. Evidence must always be a JSON array of strings.",
             json.dumps(prompt),
         )
         keyed_assessment = payload.get("assessment")

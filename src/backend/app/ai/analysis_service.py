@@ -165,6 +165,10 @@ class AIAnalysisService:
             matches,
             lambda match: match.requirement.category.lower() == "experience",
         )
+        project_score = self._component_score(
+            matches,
+            lambda match: match.requirement.category.lower() in {"projects", "project", "portfolio"},
+        )
         semantic_score = self._average_score(matches, lambda match: match.semantic_similarity)
         overall_score = round(
             required_score * REQUIRED_SKILLS_WEIGHT
@@ -201,6 +205,7 @@ class AIAnalysisService:
             required_skill_score=required_score,
             preferred_skill_score=preferred_score,
             experience_score=experience_score,
+            project_score=project_score,
             semantic_similarity_score=semantic_score,
             overall_score=overall_score,
             matches=matches,

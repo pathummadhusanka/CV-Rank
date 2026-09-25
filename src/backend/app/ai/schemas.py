@@ -48,6 +48,7 @@ class CandidateAnalysis(BaseModel):
     required_skill_score: float = Field(ge=0, le=100)
     preferred_skill_score: float = Field(ge=0, le=100)
     experience_score: float = Field(ge=0, le=100)
+    project_score: float = Field(ge=0, le=100, default=100.0)
     semantic_similarity_score: float = Field(ge=0, le=100)
     overall_score: float = Field(ge=0, le=100)
     matches: list[RequirementMatch]
