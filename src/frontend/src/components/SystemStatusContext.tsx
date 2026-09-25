@@ -7,6 +7,8 @@ import {
 	type HealthResponse,
 } from "@/lib/api";
 
+import { syncDatabaseInstance } from "@/lib/storage";
+
 const HEALTH_CHECK_INTERVAL_MS = 30000;
 const STARTUP_GRACE_PERIOD_MS = HEALTH_CHECK_INTERVAL_MS + 5000;
 
@@ -42,6 +44,9 @@ export function SystemStatusProvider({ children }: { children: ReactNode }) {
 			const [backendResult, aiResult] = await Promise.allSettled([getHealth(), getAIHealth()]);
 			if (backendResult.status === "fulfilled") {
 				setHealth(backendResult.value);
+				if (backendResult.value.db_instance_id) {
+					syncDatabaseInstance(backendResult.value.db_instance_id);
+				}
 				setBackendStatus(backendResult.value.status === "ok" ? "online" : "offline");
 				setIsStarting(false);
 			} else {

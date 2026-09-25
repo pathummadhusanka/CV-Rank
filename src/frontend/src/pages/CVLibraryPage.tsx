@@ -5,7 +5,7 @@ import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 import { CreateBatchModal } from "@/components/CreateBatchModal";
 import { CVUploader } from "@/components/CVUploader";
 import { deleteCV, getCVs, type CVSummary } from "@/lib/api";
-import { deleteStoredBatch, getStoredBatches, sanitizeStoredBatches, saveStoredBatch, type CVBatch } from "@/lib/storage";
+import { clearAllStoredBatches, deleteStoredBatch, getStoredBatches, sanitizeStoredBatches, saveStoredBatch, type CVBatch } from "@/lib/storage";
 
 function DocumentIcon({ className = "size-3" }: { className?: string }) {
 	return (
@@ -35,7 +35,13 @@ export default function CVLibraryPage() {
 			setBatches(sanitizeStoredBatches(fetched.map((cv) => cv.id)));
 		} catch {
 			setCVs([]);
+			setBatches(clearAllStoredBatches());
 		}
+	};
+
+	const handleClearAllBatches = () => {
+		const cleared = clearAllStoredBatches();
+		setBatches(cleared);
 	};
 
 	const handleConfirmDelete = async () => {
@@ -120,6 +126,9 @@ export default function CVLibraryPage() {
 							<h2 className="text-base font-bold text-foreground">Saved CV Batches ({batches.length})</h2>
 							<p className="text-xs text-muted-foreground">Pre-grouped candidate pools for fast one-click evaluations.</p>
 						</div>
+						<Button variant="outline" size="sm" onClick={handleClearAllBatches}>
+							Clear All Batches
+						</Button>
 					</div>
 
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">

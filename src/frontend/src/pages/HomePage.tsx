@@ -10,6 +10,7 @@ import { JobRequirementsCard } from "@/components/JobRequirementsCard";
 import { Button } from "@/components/ui/button";
 import { evaluateCandidatesLive } from "@/lib/rankingEngine";
 import {
+	clearAllStoredBatches,
 	getStoredBatches,
 	getStoredProjectById,
 	sanitizeStoredBatches,
@@ -61,7 +62,10 @@ export default function HomePage() {
 				setLibraryCVs(cvs);
 				setStoredBatches(sanitizeStoredBatches(cvs.map((cv) => cv.id)));
 			})
-			.catch(() => setLibraryCVs([]));
+			.catch(() => {
+				setLibraryCVs([]);
+				setStoredBatches(clearAllStoredBatches());
+			});
 		getJobs()
 			.then((jobs) => {
 				setStoredJobs(jobs);

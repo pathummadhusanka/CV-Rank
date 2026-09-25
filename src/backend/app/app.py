@@ -2,13 +2,15 @@ import logging
 import os
 from time import perf_counter
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 from app.ai.errors import AIProviderError
 from app.ai.openrouter_provider import check_openrouter_health
 from app.core.config import settings
+from app.db.database import create_tables, get_session
+from app.db.models import DatabaseState
 from app.routes.cvs import router as cvs_router
-from app.db.database import create_tables
 from app.routes.jobs import router as jobs_router
 from app.routes.matching import router as matching_router
 from app.routes.analysis import router as analysis_router
@@ -48,11 +50,14 @@ async def ai_provider_error_handler(request: Request, exc: AIProviderError):
 create_tables()
 
 @app.get("/health")
-def health_check():
+def health_check(session: Session = Depends(get_session)):
+    db_state = session.get(DatabaseState, "db_instance_id")
+    instance_id = db_state.value if db_state else "default"
     return {
         "service": "cv-rank",
         "version": "0.1.0",
         "status": "ok",
+        "db_instance_id": instance_id,
     }
 
 

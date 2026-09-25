@@ -180,6 +180,31 @@ export function sanitizeStoredBatches(validCVIds: string[]): CVBatch[] {
 	return sanitized;
 }
 
+const DB_INSTANCE_STORAGE_KEY = "cv_rank_db_instance_id";
+
+export function syncDatabaseInstance(currentDbInstanceId: string) {
+	if (!currentDbInstanceId) return;
+	try {
+		const stored = localStorage.getItem(DB_INSTANCE_STORAGE_KEY);
+		if (stored && stored !== currentDbInstanceId) {
+			console.info(`[storage] Fresh DB instance detected (${stored} -> ${currentDbInstanceId}). Purging stale local batches.`);
+			clearAllStoredBatches();
+		}
+		localStorage.setItem(DB_INSTANCE_STORAGE_KEY, currentDbInstanceId);
+	} catch {
+		// Ignore storage errors
+	}
+}
+
+export function clearAllStoredBatches(): CVBatch[] {
+	try {
+		localStorage.removeItem(BATCHES_STORAGE_KEY);
+	} catch {
+		// Ignore storage write errors
+	}
+	return [];
+}
+
 export function saveStoredBatch(batch: CVBatch): CVBatch[] {
 	const current = getStoredBatches();
 	const existingIndex = current.findIndex((b) => b.id === batch.id);

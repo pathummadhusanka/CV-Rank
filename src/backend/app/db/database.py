@@ -1,4 +1,5 @@
 from pathlib import Path
+import uuid
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from collections.abc import Generator
@@ -36,12 +37,16 @@ def get_session() -> Generator[Session, None, None]:
     with SessionLocal() as session:
         yield session
 
+
 def create_tables():
     from app.db.models import CV, DatabaseState, ExtractionTerm, Job
 
     Base.metadata.create_all(bind=engine)
 
     with SessionLocal() as session:
+        if not session.get(DatabaseState, "db_instance_id"):
+            session.add(DatabaseState(key="db_instance_id", value=f"inst-{uuid.uuid4().hex[:12]}"))
+            session.commit()
         if not session.query(ExtractionTerm).first():
             session.add_all([
                 ExtractionTerm(term=term, category="skill")

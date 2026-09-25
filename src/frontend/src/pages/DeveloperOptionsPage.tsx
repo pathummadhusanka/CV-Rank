@@ -78,6 +78,25 @@ export default function DeveloperOptionsPage() {
 					</p>
 				</div>
 			</section>
+
+			<section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-xs">
+				<div>
+					<h2 className="text-base font-bold text-foreground">Local Browser Storage &amp; Batches Reset</h2>
+					<p className="mt-1 text-xs text-muted-foreground">
+						Clear saved browser local storage (CV Batches &amp; project history) after a fresh backend database run.
+					</p>
+				</div>
+				<Button
+					variant="outline"
+					size="sm"
+					onClick={() => {
+						localStorage.clear();
+						window.location.reload();
+					}}
+				>
+					Clear All Local Browser Batches &amp; Storage
+				</Button>
+			</section>
 		</div>
 	);
 }

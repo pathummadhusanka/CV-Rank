@@ -2,6 +2,7 @@ export interface HealthResponse {
 	service: string;
 	version: string;
 	status: string;
+	db_instance_id?: string;
 }
 
 export type AIHealthStatus =
