@@ -4,10 +4,11 @@ export type MatchClassification = "strong" | "partial" | "no_evidence" | "contra
 
 export interface RequirementMatch {
 	requirement: string;
-	category: "skill" | "experience" | "education";
+	category: "skill" | "experience" | "education" | "projects";
 	weight: number;
 	status: MatchClassification;
 	evidence: string;
+	reasoning?: string;
 }
 
 export interface RankedCandidate {
@@ -22,10 +23,13 @@ export interface RankedCandidate {
 		requiredSkills: number;
 		preferredSkills: number;
 		experience: number;
+		projects?: number;
 		semanticSimilarity: number;
 	};
 	matches: RequirementMatch[];
 	strengths: string[];
 	gaps: string[];
 	explanation: string;
+	executiveSummary?: string;
+	interviewQuestions?: string[];
 }

@@ -161,7 +161,9 @@ def test_analysis_endpoint_returns_service_unavailable_on_provider_failure(
     response = client.post("/analysis/jobs/job-1")
 
     assert response.status_code == 503
-    assert response.json() == {"detail": "AI analysis is currently unavailable"}
+    assert response.json() == {
+        "detail": "provider unavailable",
+    }
 
 
 def test_analysis_endpoint_returns_service_unavailable_without_api_key(
@@ -184,4 +186,7 @@ def test_analysis_endpoint_returns_service_unavailable_without_api_key(
     response = client.post("/analysis/jobs/job-1")
 
     assert response.status_code == 503
-    assert response.json() == {"detail": "AI analysis is currently unavailable"}
+    assert response.json() == {
+        "detail": "AI provider configuration is missing",
+        "code": "missing_api_key",
+    }

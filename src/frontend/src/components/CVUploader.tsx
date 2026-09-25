@@ -19,11 +19,12 @@ interface FileUploadItem {
 interface CVUploaderProps {
 	onCandidatesChange: (candidates: UploadedCandidate[]) => void;
 	disabled?: boolean;
+	hideHeader?: boolean;
 }
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
-export function CVUploader({ onCandidatesChange, disabled }: CVUploaderProps) {
+export function CVUploader({ onCandidatesChange, disabled, hideHeader = false }: CVUploaderProps) {
 	const [files, setFiles] = useState<FileUploadItem[]>([]);
 	const [isDragging, setIsDragging] = useState(false);
 	const [globalError, setGlobalError] = useState<string | null>(null);
@@ -160,28 +161,30 @@ export function CVUploader({ onCandidatesChange, disabled }: CVUploaderProps) {
 	const isUploadingAny = files.some((f) => f.status === "uploading");
 
 	return (
-		<div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-4">
-			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border/60">
-				<div>
-					<h3 className="text-base font-bold text-foreground tracking-tight">
-						Step 2: Upload Candidate CVs (PDF)
-					</h3>
-					<p className="text-xs text-muted-foreground mt-0.5">
-						Upload one or multiple PDF resumes. The backend extracts text and detects qualifications.
-					</p>
-				</div>
+		<div className={hideHeader ? "space-y-4" : "rounded-xl border border-border bg-card p-6 shadow-xs space-y-4"}>
+			{!hideHeader && (
+				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border/60">
+					<div>
+						<h3 className="text-base font-bold text-foreground tracking-tight">
+							Step 2: Upload Candidate CVs (PDF)
+						</h3>
+						<p className="text-xs text-muted-foreground mt-0.5">
+							Upload one or multiple PDF resumes. The backend extracts text and detects qualifications.
+						</p>
+					</div>
 
-				{files.length > 0 && (
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={handleClearAll}
-						disabled={disabled || isUploadingAny}
-					>
-						Clear All
-					</Button>
-				)}
-			</div>
+					{files.length > 0 && (
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={handleClearAll}
+							disabled={disabled || isUploadingAny}
+						>
+							Clear All
+						</Button>
+					)}
+				</div>
+			)}
 
 			{globalError && (
 				<div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-3 text-xs text-amber-700 dark:text-amber-400 flex items-center justify-between">

@@ -62,6 +62,11 @@ class IncompleteProvider(AnalysisProvider):
         return AICandidateAssessment(assessments=[])
 
 
+class ReviewedRequirementsProvider(AnalysisProvider):
+    def extract_requirements(self, job_description):
+        raise AssertionError("reviewed requirements should bypass extraction")
+
+
 def test_analysis_service_calculates_components_and_ranks_candidates():
     service = AIAnalysisService(AnalysisProvider())
 
@@ -100,8 +105,30 @@ def test_analysis_service_requires_complete_ai_assessments():
         )
 
 
-def test_split_cv_text_uses_paragraphs_and_chunks_long_text():
-    chunks = split_cv_text("Summary\n\n" + "Python " * 300, max_chunk_length=100)
+def test_analysis_service_uses_reviewed_requirements():
+    service = AIAnalysisService(ReviewedRequirementsProvider())
+    reviewed = AIJobAnalysis(
+        requirements=[
+            AIRequirement(
+                description="Customer relationship management",
+                category="skill",
+                required=True,
+                weight=1.0,
+            )
+        ]
+    )
 
-    assert chunks[0] == "general: Summary"
+    result = service.analyze(
+        "Sales role",
+        [CandidateDocument("cv-1", "candidate.pdf", "CRM experience")],
+        reviewed,
+    )
+
+    assert result.requirements == reviewed.requirements
+
+
+def test_split_cv_text_uses_paragraphs_and_chunks_long_text():
+    chunks = split_cv_text("Overview\n\n" + "Python " * 300, max_chunk_length=100)
+
+    assert chunks[0] == "general: Overview"
     assert all(len(chunk) <= 100 for chunk in chunks)

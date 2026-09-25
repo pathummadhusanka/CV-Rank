@@ -1,4 +1,4 @@
-import { analyzeJob, type AIAnalysisCandidate, type AIAssessmentClassification } from "@/lib/api";
+import { analyzeJob, type AIAnalysisCandidate, type AIAssessmentClassification, type AIRequirement } from "@/lib/api";
 import type { UploadedCandidate } from "@/components/CVUploader";
 import type { MatchClassification, RankedCandidate, RequirementMatch } from "@/types/ranking";
 
@@ -18,6 +18,7 @@ function mapClassification(classification: AIAssessmentClassification): MatchCla
 
 function mapCategory(category: string): RequirementMatch["category"] {
 	const normalized = category.toLowerCase();
+	if (normalized.includes("project") || normalized.includes("portfolio")) return "projects";
 	if (normalized.includes("experience")) return "experience";
 	if (normalized.includes("education")) return "education";
 	return "skill";
@@ -30,6 +31,7 @@ function mapCandidate(candidate: AIAnalysisCandidate): RankedCandidate {
 		weight: item.requirement.weight,
 		status: mapClassification(item.classification),
 		evidence: item.evidence.join(" ") || "No evidence provided.",
+		reasoning: item.reasoning,
 	}));
 
 	return {
@@ -44,17 +46,21 @@ function mapCandidate(candidate: AIAnalysisCandidate): RankedCandidate {
 			preferredSkills: candidate.preferred_skill_score,
 			experience: candidate.experience_score,
 			semanticSimilarity: candidate.semantic_similarity_score,
+			projects: candidate.project_score,
 		},
 		strengths: candidate.strengths,
 		gaps: candidate.gaps,
 		explanation: candidate.explanation,
+		executiveSummary: candidate.executive_summary,
+		interviewQuestions: candidate.interview_questions,
 	};
 }
 
 export async function evaluateCandidatesLive(
 	jobId: string,
-	_candidates: UploadedCandidate[],
+	candidates: UploadedCandidate[],
+	requirements: AIRequirement[],
 ): Promise<RankedCandidate[]> {
-	const analysis = await analyzeJob(jobId);
+	const analysis = await analyzeJob(jobId, candidates.map((candidate) => candidate.id), requirements);
 	return analysis.candidates.map(mapCandidate);
 }

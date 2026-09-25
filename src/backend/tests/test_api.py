@@ -1,6 +1,11 @@
+import json
+
+from pydantic import SecretStr
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+import app.app as app_module
+import app.ai.openrouter_provider as openrouter_module
 from app.db.models import Job
 
 
@@ -8,11 +13,42 @@ def test_health_check(client):
     response = client.get("/health")
 
     assert response.status_code == 200
-    assert response.json() == {
-        "service": "cv-rank",
-        "version": "0.1.0",
-        "status": "ok",
-    }
+    data = response.json()
+    assert data["service"] == "cv-rank"
+    assert data["version"] == "0.1.0"
+    assert data["status"] == "ok"
+    assert "db_instance_id" in data
+
+
+def test_ai_health_check_reports_missing_key(client, monkeypatch):
+    monkeypatch.setattr(app_module.settings, "ai_api_key", None)
+
+    response = client.get("/health/ai")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "missing_api_key"
+    assert "not been configured" in response.json()["message"]
+
+
+def test_ai_health_check_reports_ready_key(client, monkeypatch):
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            return False
+
+        def read(self):
+            return json.dumps({"data": {"limit_remaining": 12.5}}).encode()
+
+    monkeypatch.setattr(app_module.settings, "ai_api_key", SecretStr("test-key"))
+    monkeypatch.setattr(openrouter_module, "urlopen", lambda request, timeout: FakeResponse())
+
+    response = client.get("/health/ai")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ready"
+    assert response.json()["limit_remaining"] == 12.5
 
 
 def test_create_job_persists_job(client, tmp_path):

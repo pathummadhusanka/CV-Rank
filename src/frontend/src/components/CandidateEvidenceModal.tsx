@@ -9,12 +9,13 @@ interface CandidateEvidenceModalProps {
 
 export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidenceModalProps) {
 	useEffect(() => {
+		if (!candidate) return;
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === "Escape") onClose();
 		};
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [onClose]);
+	}, [candidate, onClose]);
 
 	if (!candidate) return null;
 
@@ -54,14 +55,20 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-xs animate-in fade-in duration-200">
-			<div
-				className="fixed inset-0"
+		<div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/80 backdrop-blur-xs animate-in fade-in duration-200">
+			<button
+				type="button"
+				className="fixed inset-0 cursor-default"
 				onClick={onClose}
-				aria-hidden="true"
+				aria-label="Close evidence breakdown"
 			/>
 
-			<div className="relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-xl border border-border bg-card shadow-2xl overflow-hidden z-10">
+			<div
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="candidate-evidence-title"
+				className="relative z-10 w-full max-w-2xl max-h-[85vh] flex flex-col rounded-xl border border-border bg-card shadow-2xl overflow-hidden"
+			>
 				{/* Modal Header */}
 				<div className="p-6 border-b border-border/80 flex items-start justify-between gap-4 bg-muted/20">
 					<div className="space-y-1">
@@ -73,7 +80,7 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 								ID: {candidate.id.slice(0, 8)}...
 							</span>
 						</div>
-						<h2 className="text-lg font-bold text-foreground">
+						<h2 id="candidate-evidence-title" className="text-lg font-bold text-foreground">
 							{candidate.candidateName || candidate.filename}
 						</h2>
 						{candidate.candidateName && (
@@ -107,7 +114,7 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 							<div className="text-xs font-semibold text-foreground uppercase tracking-wider">
 								Hybrid AI Scoring Formula
 							</div>
-							<div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+							<div className={`grid grid-cols-2 ${candidate.scoreBreakdown.projects !== undefined ? "sm:grid-cols-5" : "sm:grid-cols-4"} gap-2 text-center`}>
 								<div className="bg-background rounded-md p-2 border border-border/60">
 									<span className="text-[10px] text-muted-foreground uppercase block font-medium">
 										Required Skills (40%)
@@ -140,6 +147,16 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 										{candidate.scoreBreakdown.semanticSimilarity}%
 									</span>
 								</div>
+								{candidate.scoreBreakdown.projects !== undefined && (
+									<div className="bg-background rounded-md p-2 border border-border/60">
+										<span className="text-[10px] text-muted-foreground uppercase block font-medium">
+											Projects
+										</span>
+										<span className="text-sm font-bold text-foreground">
+											{candidate.scoreBreakdown.projects}%
+										</span>
+									</div>
+								)}
 							</div>
 						</div>
 					) : candidate.scores && (
@@ -176,15 +193,32 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 						</div>
 					)}
 
-					{/* Explanation */}
-					<div className="rounded-lg border border-border bg-muted/20 p-3.5 space-y-1">
-						<div className="text-xs font-semibold text-foreground uppercase tracking-wider">
-							Evaluation Summary
+					{/* Executive Summary / Explanation */}
+					<div className="rounded-lg border border-primary/20 bg-primary/5 p-3.5 space-y-1">
+						<div className="text-xs font-bold text-primary uppercase tracking-wider">
+							Executive Candidate Fit Summary
 						</div>
-						<p className="text-xs text-foreground/90 leading-relaxed">
-							{candidate.explanation}
+						<p className="text-xs text-foreground/90 leading-relaxed font-medium">
+							{candidate.executiveSummary || candidate.explanation}
 						</p>
 					</div>
+
+					{/* Suggested Interview Probing Questions */}
+					{candidate.interviewQuestions && candidate.interviewQuestions.length > 0 && (
+						<div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3.5 space-y-2">
+							<div className="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+								<span>💡</span>
+								<span>Suggested Interview Probing Questions</span>
+							</div>
+							<ul className="text-xs space-y-1.5 text-foreground/90 list-disc list-inside">
+								{candidate.interviewQuestions.map((q, idx) => (
+									<li key={idx} className="leading-snug">
+										<span className="font-semibold text-foreground">{q}</span>
+									</li>
+								))}
+							</ul>
+						</div>
+					)}
 
 					{/* Strengths & Gaps Grid */}
 					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -218,27 +252,33 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 					{/* Requirement Breakdown */}
 					<div className="space-y-2">
 						<div className="text-xs font-bold text-foreground uppercase tracking-wider">
-							Detailed Evidence Breakdown
+							Detailed Evidence Breakdown &amp; Reasoning
 						</div>
 
 						<div className="divide-y divide-border/60 rounded-lg border border-border overflow-hidden">
 							{candidate.matches.map((item, idx) => (
-								<div key={idx} className="p-3 space-y-1 bg-card">
+								<div key={idx} className="p-3.5 space-y-2 bg-card">
 									<div className="flex items-center justify-between gap-2">
 										<div className="flex items-center gap-2">
 											<span className="text-xs font-semibold text-foreground capitalize">
 												{item.requirement}
 											</span>
-											<span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground">
+											<span className={`text-[10px] uppercase font-mono px-1.5 py-0.2 rounded ${item.category === "projects" ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 font-semibold" : "bg-muted text-muted-foreground"}`}>
 												{item.category}
 											</span>
 										</div>
 										{getBadgeForStatus(item.status)}
 									</div>
 
-									<p className="text-xs text-muted-foreground italic pl-2 border-l-2 border-primary/30">
+									<p className="text-xs text-foreground/90 italic pl-2.5 border-l-2 border-primary/40 bg-muted/20 py-1 pr-2 rounded-r-md">
 										&ldquo;{item.evidence}&rdquo;
 									</p>
+
+									{item.reasoning && (
+										<p className="text-[11px] text-muted-foreground bg-background p-2 rounded-md border border-border/60">
+											<strong className="text-foreground/80">AI Assessment Reasoning:</strong> {item.reasoning}
+										</p>
+									)}
 								</div>
 							))}
 						</div>
