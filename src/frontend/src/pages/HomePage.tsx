@@ -142,9 +142,6 @@ export default function HomePage() {
 		setProjectJobAvailable(true);
 		setSearchParams({});
 		setShowNewJobForm(false);
-		setCandidates([]);
-		setUploadedCandidates([]);
-		setSelectedLibraryIds([]);
 		setRankedResults([]);
 		setAnalysisError(null);
 		setIsProjectSaved(false);
@@ -159,9 +156,6 @@ export default function HomePage() {
 		setShowNewJobForm(false);
 		setAnalysisError(null);
 		setIsProjectSaved(false);
-		setCandidates([]);
-		setUploadedCandidates([]);
-		setSelectedLibraryIds([]);
 	};
 
 	const handleLibrarySelection = (cvId: string, selected: boolean) => {
@@ -293,6 +287,28 @@ export default function HomePage() {
 				</section>
 			)}
 
+			{candidates.length > 0 && (!activeJob || isChoosingJob) && (
+				<section className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+					<div className="flex items-center gap-2">
+						<span className="size-2 rounded-full bg-primary animate-pulse" />
+						<div>
+							<strong className="text-foreground font-bold">Attached Candidate Pool:</strong>{" "}
+							<span className="text-muted-foreground">{candidates.length} candidate CV{candidates.length === 1 ? "" : "s"} attached. Select a job role below to run evaluation.</span>
+						</div>
+					</div>
+					<div className="flex items-center gap-1.5 flex-wrap">
+						{candidates.slice(0, 3).map((c) => (
+							<span key={c.id} className="rounded border border-primary/20 bg-background px-2 py-0.5 font-medium text-foreground text-[11px] truncate max-w-[160px]">
+								📄 {c.filename}
+							</span>
+						))}
+						{candidates.length > 3 && (
+							<span className="text-muted-foreground text-[11px] font-semibold">+{candidates.length - 3} more</span>
+						)}
+					</div>
+				</section>
+			)}
+
 			<section>
 				{!activeJob || isChoosingJob ? (
 					<div className="space-y-4">
@@ -345,73 +361,71 @@ export default function HomePage() {
 				)}
 			</section>
 
-			<section>
-				{activeJob && (
-					<div className="mb-4 rounded-xl border border-border bg-card p-6 shadow-xs space-y-4">
-						<div className="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
-							<div>
-								<h3 className="text-base font-bold text-foreground">Choose From CV Library &amp; Batches</h3>
-								<p className="text-xs text-muted-foreground">Select individual CVs or pick entire pre-saved CV Batches for this evaluation.</p>
-							</div>
-							<NavLink to="/cvs" className="text-xs font-semibold text-primary hover:underline">Manage Library &amp; Batches</NavLink>
+			<section className="space-y-4">
+				<div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-4">
+					<div className="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
+						<div>
+							<h3 className="text-base font-bold text-foreground">Step 2: Choose From CV Library &amp; Batches</h3>
+							<p className="text-xs text-muted-foreground">Select individual CVs or pick entire pre-saved CV Batches for this evaluation.</p>
 						</div>
+						<NavLink to="/cvs" className="text-xs font-semibold text-primary hover:underline">Manage Library &amp; Batches</NavLink>
+					</div>
 
-						{/* Saved CV Batches */}
-						{storedBatches.length > 0 && (
-							<div className="space-y-2">
-								<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Pre-saved CV Batches</span>
-								<div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-									{storedBatches.map((batch) => {
-										const allInBatchSelected = batch.cvIds.length > 0 && batch.cvIds.every((id) => selectedLibraryIds.includes(id));
+					{/* Saved CV Batches */}
+					{storedBatches.length > 0 && (
+						<div className="space-y-2">
+							<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Pre-saved CV Batches</span>
+							<div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+								{storedBatches.map((batch) => {
+									const allInBatchSelected = batch.cvIds.length > 0 && batch.cvIds.every((id) => selectedLibraryIds.includes(id));
 
-										return (
-											<label key={batch.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 hover:bg-primary/10 transition-colors">
-												<input
-													type="checkbox"
-													checked={allInBatchSelected}
-													onChange={(event) => handleBatchToggle(batch, event.target.checked)}
-													className="mt-0.5"
-												/>
-												<div className="min-w-0">
-													<div className="flex items-center gap-2">
-														<span className="text-xs font-bold text-foreground">{batch.name}</span>
-														<span className="rounded bg-primary/10 px-1.5 py-0.2 text-[10px] font-semibold text-primary">
-															{batch.cvIds.length} CVs
-														</span>
-													</div>
-													{batch.description && <p className="text-[11px] text-muted-foreground truncate mt-0.5">{batch.description}</p>}
-												</div>
-											</label>
-										);
-									})}
-								</div>
-							</div>
-						)}
-
-						{/* Individual Library CVs */}
-						{libraryCVs.length === 0 ? (
-							<p className="pt-2 text-xs text-muted-foreground">No stored CVs yet. Upload one below.</p>
-						) : (
-							<div className="space-y-2">
-								<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Individual CV Resumes</span>
-								<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-									{libraryCVs.map((cv) => (
-										<label key={cv.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/80 p-3 hover:bg-muted/30">
+									return (
+										<label key={batch.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 hover:bg-primary/10 transition-colors">
 											<input
 												type="checkbox"
-												checked={selectedLibraryIds.includes(cv.id)}
-												onChange={(event) => handleLibrarySelection(cv.id, event.target.checked)}
+												checked={allInBatchSelected}
+												onChange={(event) => handleBatchToggle(batch, event.target.checked)}
+												className="mt-0.5"
 											/>
-											<span className="min-w-0 truncate text-xs font-medium text-foreground">{cv.filename}</span>
+											<div className="min-w-0">
+												<div className="flex items-center gap-2">
+													<span className="text-xs font-bold text-foreground">{batch.name}</span>
+													<span className="rounded bg-primary/10 px-1.5 py-0.2 text-[10px] font-semibold text-primary">
+														{batch.cvIds.length} CVs
+													</span>
+												</div>
+												{batch.description && <p className="text-[11px] text-muted-foreground truncate mt-0.5">{batch.description}</p>}
+											</div>
 										</label>
-									))}
-								</div>
+									);
+								})}
 							</div>
-						)}
-					</div>
-				)}
+						</div>
+					)}
 
-				<CVUploader onCandidatesChange={handleCandidatesChange} disabled={!activeJob} />
+					{/* Individual Library CVs */}
+					{libraryCVs.length === 0 ? (
+						<p className="pt-2 text-xs text-muted-foreground">No stored CVs yet. Upload one below.</p>
+					) : (
+						<div className="space-y-2">
+							<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Individual CV Resumes</span>
+							<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+								{libraryCVs.map((cv) => (
+									<label key={cv.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/80 p-3 hover:bg-muted/30">
+										<input
+											type="checkbox"
+											checked={selectedLibraryIds.includes(cv.id)}
+											onChange={(event) => handleLibrarySelection(cv.id, event.target.checked)}
+										/>
+										<span className="min-w-0 truncate text-xs font-medium text-foreground">{cv.filename}</span>
+									</label>
+								))}
+							</div>
+						</div>
+					)}
+				</div>
+
+				<CVUploader onCandidatesChange={handleCandidatesChange} />
 			</section>
 
 			{activeJob && candidates.length > 0 && rankedResults.length === 0 && (
