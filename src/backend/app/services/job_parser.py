@@ -23,7 +23,7 @@ SKILLS = {
 
 def extract_skills(text: str, terms=None) -> list[str]:
     text_lower = text.lower()
-    if terms is None:
+    if not terms:
         terms = [{"term": skill, "aliases": ""} for skill in SKILLS]
     matched = []
     for item in terms:
@@ -32,7 +32,7 @@ def extract_skills(text: str, terms=None) -> list[str]:
         alias_list = [alias.strip().lower() for alias in aliases.split(",") if alias.strip()]
         search_values = [term.strip().lower()] + alias_list
         if any(re.search(rf"(?<!\w){re.escape(value)}(?!\w)", text_lower) for value in search_values if value):
-            matched.append(term)
+            matched.append(term.lower())
     return matched
 
 

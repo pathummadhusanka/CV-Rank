@@ -45,20 +45,29 @@ def split_cv_text(text: str, max_chunk_length: int = 1200) -> list[str]:
         "certifications",
     }
     current_section = "general"
-    sectioned_lines = []
+    section_paragraphs = []
+    current_lines = []
 
     for line in text.splitlines():
         normalized = re.sub(r"[^a-z ]", "", line.lower()).strip()
         if normalized in section_names:
+            if current_lines:
+                section_paragraphs.append("\n".join(current_lines))
+                current_lines = []
             current_section = normalized
             continue
-        if line.strip():
-            sectioned_lines.append(f"{current_section}: {line.strip()}")
+        if not line.strip():
+            if current_lines:
+                section_paragraphs.append("\n".join(current_lines))
+                current_lines = []
+            continue
+        current_lines.append(f"{current_section}: {line.strip()}")
 
-    paragraphs = [paragraph.strip() for paragraph in "\n".join(sectioned_lines).split("\n\n") if paragraph.strip()]
+    if current_lines:
+        section_paragraphs.append("\n".join(current_lines))
+
     chunks = []
-
-    for paragraph in paragraphs:
+    for paragraph in section_paragraphs:
         chunks.extend(
             paragraph[index : index + max_chunk_length]
             for index in range(0, len(paragraph), max_chunk_length)

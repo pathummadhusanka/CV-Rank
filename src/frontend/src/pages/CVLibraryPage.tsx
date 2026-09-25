@@ -6,20 +6,21 @@ import { deleteCV, getCVs, type CVSummary } from "@/lib/api";
 
 export default function CVLibraryPage() {
 	const [cvs, setCVs] = useState<CVSummary[]>([]);
-	const [error, setError] = useState<string | null>(null);
 	const [selectedCVIds, setSelectedCVIds] = useState<string[]>([]);
 	const [isDeleteMode, setIsDeleteMode] = useState(false);
 	const [pendingDeleteIds, setPendingDeleteIds] = useState<string[] | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
 
 	useEffect(() => {
-		refreshCVs().catch((reason: unknown) => {
-			setError(reason instanceof Error ? reason.message : "Could not load CVs");
-		});
+		void refreshCVs();
 	}, []);
 
 	const refreshCVs = async () => {
-		setCVs(await getCVs());
+		try {
+			setCVs(await getCVs());
+		} catch {
+			setCVs([]);
+		}
 	};
 
 	const handleConfirmDelete = async () => {
@@ -60,8 +61,7 @@ export default function CVLibraryPage() {
 				</div>
 			</div>
 
-			{error && <p className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-4 text-sm text-rose-700">{error}</p>}
-			{!error && cvs.length === 0 ? (
+			{cvs.length === 0 ? (
 				<div className="rounded-xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
 					No CVs have been uploaded yet.
 				</div>
