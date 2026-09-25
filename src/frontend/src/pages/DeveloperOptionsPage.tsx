@@ -17,7 +17,7 @@ function formatAmount(value: number | null | undefined) {
 }
 
 export default function DeveloperOptionsPage() {
-	const { aiHealth, checkHealth, lastChecked } = useSystemStatus();
+	const { aiHealth, checkHealth, lastChecked, isChecking } = useSystemStatus();
 	const status = aiHealth?.status ?? "provider_unavailable";
 	const isReady = status === "ready";
 	const isConfigured = status !== "missing_api_key";
@@ -35,7 +35,9 @@ export default function DeveloperOptionsPage() {
 					<h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Developer Options</h1>
 					<p className="text-sm text-muted-foreground">Review the server-side OpenRouter API key and account allowance.</p>
 				</div>
-				<Button variant="outline" size="sm" onClick={checkHealth}>Refresh status</Button>
+				<Button variant="outline" size="sm" onClick={checkHealth} disabled={isChecking}>
+					{isChecking ? "Checking..." : "Refresh status"}
+				</Button>
 			</div>
 
 			<section className="space-y-5 rounded-xl border border-border bg-card p-5 shadow-xs">
@@ -63,6 +65,12 @@ export default function DeveloperOptionsPage() {
 					<Detail label="Usage" value={formatAmount(aiHealth?.usage)} />
 					<Detail label="Key limit" value={formatAmount(aiHealth?.limit)} />
 					<Detail label="Remaining" value={formatAmount(aiHealth?.limit_remaining)} />
+					<div className="rounded-lg border border-border/70 bg-background p-3 flex flex-col justify-between">
+						<p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Check API key status</p>
+						<Button variant="outline" size="sm" className="mt-2 w-fit text-xs" onClick={checkHealth} disabled={isChecking}>
+							{isChecking ? "Checking status..." : "Check API key status"}
+						</Button>
+					</div>
 				</div>
 				<div className="border-t border-border/60 pt-3 text-xs text-muted-foreground">
 					<p>Model: <span className="font-medium text-foreground">{aiHealth?.model ?? "Not available"}</span></p>
