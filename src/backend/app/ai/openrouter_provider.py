@@ -16,30 +16,67 @@ from app.core.config import Settings, settings
 
 logger = logging.getLogger("cv_rank.ai.openrouter")
 
+_last_runtime_ai_error: dict[str, Any] | None = None
+
+
+def set_last_runtime_ai_error(status: str, message: str) -> None:
+    global _last_runtime_ai_error
+    _last_runtime_ai_error = {
+        "status": status,
+        "message": message,
+        "time": perf_counter(),
+    }
+
+
+def get_last_runtime_ai_error() -> dict[str, Any] | None:
+    global _last_runtime_ai_error
+    if _last_runtime_ai_error and (perf_counter() - _last_runtime_ai_error.get("time", 0)) < 600:
+        return _last_runtime_ai_error
+    return None
+
+
+def clear_last_runtime_ai_error() -> None:
+    global _last_runtime_ai_error
+    _last_runtime_ai_error = None
+
 
 def classify_openrouter_error(exc: OpenAIError) -> AIProviderError:
     status_code = getattr(exc, "status_code", None)
-    if status_code == 401:
-        return AIProviderError(
-            "The OpenRouter API key is invalid. Ask the administrator to replace it.",
-            code="invalid_api_key",
-        )
-    if status_code == 402:
-        return AIProviderError(
-            "OpenRouter credits or the configured key limit have been exhausted.",
-            code="credits_exhausted",
-        )
-    if status_code == 403:
-        return AIProviderError(
-            "The OpenRouter API key does not have permission to use this service.",
-            code="forbidden",
-        )
-    if status_code == 429:
-        return AIProviderError(
-            "OpenRouter is temporarily rate-limiting requests. Try again shortly.",
-            code="rate_limited",
-        )
-    return AIProviderError("OpenRouter is temporarily unavailable. Try again shortly.")
+    code_attr = getattr(exc, "code", None)
+    body_attr = getattr(exc, "body", None)
+    err_str = f"{exc} {status_code} {code_attr} {body_attr}".lower()
+
+    if status_code == 401 or "401" in err_str or "invalid_api_key" in err_str or "invalid api key" in err_str:
+        msg = "The OpenRouter API key is invalid. Ask the administrator to replace it."
+        set_last_runtime_ai_error("invalid_api_key", msg)
+        return AIProviderError(msg, code="invalid_api_key")
+
+    if (
+        status_code == 402
+        or "402" in err_str
+        or "credit" in err_str
+        or "balance" in err_str
+        or "quota" in err_str
+        or "insufficient" in err_str
+        or "exhausted" in err_str
+    ):
+        msg = "OpenRouter credits or the configured key limit have been exhausted."
+        set_last_runtime_ai_error("credits_exhausted", msg)
+        return AIProviderError(msg, code="credits_exhausted")
+
+    if status_code == 403 or "403" in err_str or "forbidden" in err_str:
+        msg = "The OpenRouter API key does not have permission to use this service."
+        set_last_runtime_ai_error("forbidden", msg)
+        return AIProviderError(msg, code="forbidden")
+
+    if status_code == 429 or "429" in err_str or "rate_limit" in err_str or "rate limit" in err_str:
+        msg = "OpenRouter is temporarily rate-limiting requests. Try again shortly."
+        set_last_runtime_ai_error("rate_limited", msg)
+        return AIProviderError(msg, code="rate_limited")
+
+    msg = "OpenRouter is temporarily unavailable. Try again shortly."
+    set_last_runtime_ai_error("provider_unavailable", msg)
+    return AIProviderError(msg)
 
 
 def check_openrouter_health(provider_settings: Settings = settings) -> dict[str, Any]:
@@ -51,30 +88,84 @@ def check_openrouter_health(provider_settings: Settings = settings) -> dict[str,
             "message": "The OpenRouter API key has not been configured.",
         }
 
-    request = Request(
-        f"{provider_settings.ai_base_url.rstrip('/')}/key",
-        headers={
-            "Authorization": f"Bearer {provider_settings.ai_api_key.get_secret_value()}",
-            "X-Title": provider_settings.ai_app_title,
-        },
-    )
-    try:
-        with urlopen(request, timeout=provider_settings.ai_timeout_seconds) as response:
-            payload = json.loads(response.read())
-    except HTTPError as exc:
-        status_code = exc.code
-        if status_code == 401:
-            status, message = "invalid_api_key", "The OpenRouter API key is invalid."
-        elif status_code == 402:
-            status, message = "credits_exhausted", "OpenRouter credits or the key limit have been exhausted."
-        elif status_code == 403:
-            status, message = "forbidden", "The OpenRouter API key does not have permission to use this service."
-        elif status_code == 429:
-            status, message = "rate_limited", "OpenRouter is temporarily rate-limiting requests."
-        else:
-            status, message = "provider_unavailable", "OpenRouter could not be reached. Try again shortly."
-        return {"provider": provider_settings.ai_provider, "model": provider_settings.ai_model, "status": status, "message": message}
-    except (URLError, TimeoutError, JSONDecodeError, OSError):
+    api_key_str = provider_settings.ai_api_key.get_secret_value()
+    if not api_key_str.strip():
+        return {
+            "provider": provider_settings.ai_provider,
+            "model": provider_settings.ai_model,
+            "status": "missing_api_key",
+            "message": "The OpenRouter API key is empty.",
+        }
+
+    base_url = provider_settings.ai_base_url.rstrip("/")
+    # OpenRouter key info official URL is /auth/key
+    urls_to_try = [
+        f"{base_url}/auth/key" if not base_url.endswith("/auth") else f"{base_url}/key",
+        f"{base_url}/key",
+        "https://openrouter.ai/api/v1/auth/key",
+    ]
+
+    payload = None
+    last_http_code = None
+
+    for url in urls_to_try:
+        request = Request(
+            url,
+            headers={
+                "Authorization": f"Bearer {api_key_str}",
+                "X-Title": provider_settings.ai_app_title,
+            },
+        )
+        try:
+            with urlopen(request, timeout=provider_settings.ai_timeout_seconds) as response:
+                payload = json.loads(response.read())
+                break
+        except HTTPError as exc:
+            last_http_code = exc.code
+            if exc.code in (401, 402, 403, 429):
+                break
+        except (URLError, TimeoutError, JSONDecodeError, OSError):
+            continue
+
+    if payload is None:
+        if last_http_code == 401:
+            return {
+                "provider": provider_settings.ai_provider,
+                "model": provider_settings.ai_model,
+                "status": "invalid_api_key",
+                "message": "The OpenRouter API key is invalid.",
+            }
+        elif last_http_code == 402:
+            return {
+                "provider": provider_settings.ai_provider,
+                "model": provider_settings.ai_model,
+                "status": "credits_exhausted",
+                "message": "OpenRouter credits or the key limit have been exhausted.",
+            }
+        elif last_http_code == 403:
+            return {
+                "provider": provider_settings.ai_provider,
+                "model": provider_settings.ai_model,
+                "status": "forbidden",
+                "message": "The OpenRouter API key does not have permission to use this service.",
+            }
+        elif last_http_code == 429:
+            return {
+                "provider": provider_settings.ai_provider,
+                "model": provider_settings.ai_model,
+                "status": "rate_limited",
+                "message": "OpenRouter is temporarily rate-limiting requests.",
+            }
+
+        runtime_err = get_last_runtime_ai_error()
+        if runtime_err:
+            return {
+                "provider": provider_settings.ai_provider,
+                "model": provider_settings.ai_model,
+                "status": runtime_err["status"],
+                "message": runtime_err["message"],
+            }
+
         return {
             "provider": provider_settings.ai_provider,
             "model": provider_settings.ai_model,
@@ -84,15 +175,29 @@ def check_openrouter_health(provider_settings: Settings = settings) -> dict[str,
 
     data = payload.get("data", {}) if isinstance(payload, dict) else {}
     limit_remaining = data.get("limit_remaining") if isinstance(data, dict) else None
+    usage = data.get("usage") if isinstance(data, dict) else None
+    limit = data.get("limit") if isinstance(data, dict) else None
+    is_active = data.get("is_active") if isinstance(data, dict) else None
+
     metadata = {
         "key_label": data.get("label") if isinstance(data, dict) else None,
-        "usage": data.get("usage") if isinstance(data, dict) else None,
-        "limit": data.get("limit") if isinstance(data, dict) else None,
-        "is_active": data.get("is_active") if isinstance(data, dict) else None,
+        "usage": usage,
+        "limit": limit,
+        "is_active": is_active,
         "limit_reset": data.get("limit_reset") if isinstance(data, dict) else None,
         "limit_remaining": limit_remaining,
     }
+
+    # Check for exhausted credits or limits:
+    is_exhausted = False
     if isinstance(limit_remaining, (int, float)) and limit_remaining <= 0:
+        is_exhausted = True
+    elif isinstance(limit, (int, float)) and limit > 0 and isinstance(usage, (int, float)) and usage >= limit:
+        is_exhausted = True
+    elif is_active is False:
+        is_exhausted = True
+
+    if is_exhausted:
         return {
             "provider": provider_settings.ai_provider,
             "model": provider_settings.ai_model,
@@ -100,6 +205,18 @@ def check_openrouter_health(provider_settings: Settings = settings) -> dict[str,
             "message": "OpenRouter credits or the configured key limit have been exhausted.",
             **metadata,
         }
+
+    runtime_err = get_last_runtime_ai_error()
+    if runtime_err:
+        return {
+            "provider": provider_settings.ai_provider,
+            "model": provider_settings.ai_model,
+            "status": runtime_err["status"],
+            "message": runtime_err["message"],
+            **metadata,
+        }
+
+    clear_last_runtime_ai_error()
     return {
         "provider": provider_settings.ai_provider,
         "model": provider_settings.ai_model,
@@ -121,7 +238,7 @@ class OpenRouterProvider:
             return
 
         if provider_settings.ai_api_key is None:
-            raise AIConfigurationError("AI_API_KEY is required for OpenRouter")
+            raise AIConfigurationError()
 
         headers = {"X-Title": provider_settings.ai_app_title}
         if provider_settings.ai_http_referer:

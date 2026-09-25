@@ -29,7 +29,9 @@ def extract_skills(text: str, terms=None) -> list[str]:
     for item in terms:
         term = item["term"] if isinstance(item, dict) else item.term
         aliases = item.get("aliases", "") if isinstance(item, dict) else item.aliases
-        if any(re.search(rf"(?<!\w){re.escape(value.strip().lower())}(?!\w)", text_lower) for value in [term, *aliases.split(",")]):
+        alias_list = [alias.strip().lower() for alias in aliases.split(",") if alias.strip()]
+        search_values = [term.strip().lower()] + alias_list
+        if any(re.search(rf"(?<!\w){re.escape(value)}(?!\w)", text_lower) for value in search_values if value):
             matched.append(term)
     return matched
 

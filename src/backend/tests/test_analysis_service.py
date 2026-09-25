@@ -128,7 +128,7 @@ def test_analysis_service_uses_reviewed_requirements():
 
 
 def test_split_cv_text_uses_paragraphs_and_chunks_long_text():
-    chunks = split_cv_text("Summary\n\n" + "Python " * 300, max_chunk_length=100)
+    chunks = split_cv_text("Overview\n\n" + "Python " * 300, max_chunk_length=100)
 
-    assert chunks[0] == "general: Summary"
+    assert chunks[0] == "general: Overview"
     assert all(len(chunk) <= 100 for chunk in chunks)

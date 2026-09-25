@@ -12,10 +12,12 @@ import {
 	saveStoredProject,
 	type EvaluationProject,
 } from "@/lib/storage";
-import { getAIRequirements, getCVs, getJobs, type AIRequirement, type CreateJobResponse, type CVSummary } from "@/lib/api";
+import { useSystemStatus } from "@/components/SystemStatusContext";
+import { ApiError, getAIRequirements, getCVs, getJobs, type AIHealthStatus, type AIRequirement, type CreateJobResponse, type CVSummary } from "@/lib/api";
 import type { RankedCandidate } from "@/types/ranking";
 
 export default function HomePage() {
+	const { checkHealth, reportAIError } = useSystemStatus();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const [storedJobs, setStoredJobs] = useState<CreateJobResponse[]>([]);
 	const [jobsLoaded, setJobsLoaded] = useState(false);
@@ -72,7 +74,12 @@ export default function HomePage() {
 			.catch((error) => {
 				if (mounted) {
 					setReviewedRequirements(null);
-					setRequirementsError(error instanceof Error ? error.message : "Could not extract job requirements.");
+					const msg = error instanceof Error ? error.message : "Could not extract job requirements.";
+					setRequirementsError(msg);
+					if (error instanceof ApiError && error.code) {
+						reportAIError(error.code as AIHealthStatus, msg);
+					}
+					checkHealth();
 				}
 			})
 			.finally(() => {
@@ -173,12 +180,15 @@ export default function HomePage() {
 			setSavedProjectName(`${activeJob.title} - Batch ${new Date().toLocaleDateString()}`);
 		} catch (error) {
 			setRankedResults([]);
-			setAnalysisError(
-				error instanceof Error
-					? error.message
-					: "AI analysis failed. Check the backend and OpenRouter configuration.",
-			);
+			const msg = error instanceof Error
+				? error.message
+				: "AI analysis failed. Check the backend and OpenRouter configuration.";
+			setAnalysisError(msg);
 			setAnalysisStatus(null);
+			if (error instanceof ApiError && error.code) {
+				reportAIError(error.code as AIHealthStatus, msg);
+			}
+			checkHealth();
 		} finally {
 			setIsAnalyzing(false);
 		}

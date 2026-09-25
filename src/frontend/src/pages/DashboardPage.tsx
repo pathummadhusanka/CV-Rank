@@ -52,7 +52,7 @@ export default function DashboardPage() {
 	};
 
 	const handleOpenProject = (projectId: string) => {
-		navigate(`/?projectId=${projectId}`);
+		navigate(`/evaluations?projectId=${projectId}`);
 	};
 
 	// Calculate high-level metrics
@@ -82,7 +82,7 @@ export default function DashboardPage() {
 				</div>
 
 				<div className="flex items-center gap-2">
-					<NavLink to="/">
+					<NavLink to="/evaluations">
 						<Button size="sm">+ New Evaluation</Button>
 					</NavLink>
 				</div>
@@ -166,7 +166,7 @@ export default function DashboardPage() {
 								Start an evaluation in the Workspace, upload candidate CVs, and save your run to view history here.
 							</p>
 						</div>
-						<NavLink to="/">
+						<NavLink to="/evaluations">
 							<Button size="sm">Go to Evaluation Workspace</Button>
 						</NavLink>
 					</div>

@@ -3,6 +3,7 @@ import {
 	getAIHealth,
 	getHealth,
 	type AIHealthResponse,
+	type AIHealthStatus,
 	type HealthResponse,
 } from "@/lib/api";
 
@@ -21,6 +22,7 @@ type SystemStatusContextValue = {
 	hasInitialCheckCompleted: boolean;
 	isChecking: boolean;
 	checkHealth: () => Promise<void>;
+	reportAIError: (status: AIHealthStatus, message: string) => void;
 };
 
 const SystemStatusContext = createContext<SystemStatusContextValue | null>(null);
@@ -54,6 +56,22 @@ export function SystemStatusProvider({ children }: { children: ReactNode }) {
 		}
 	};
 
+	const reportAIError = (status: AIHealthStatus, message: string) => {
+		setAIHealth((prev) => ({
+			provider: prev?.provider ?? "openrouter",
+			model: prev?.model ?? "",
+			status,
+			message,
+			key_label: prev?.key_label,
+			usage: prev?.usage,
+			limit: prev?.limit,
+			is_active: prev?.is_active,
+			limit_reset: prev?.limit_reset,
+			limit_remaining: prev?.limit_remaining,
+		}));
+		setLastChecked(new Date());
+	};
+
 	useEffect(() => {
 		checkHealth();
 		const interval = setInterval(checkHealth, HEALTH_CHECK_INTERVAL_MS);
@@ -66,7 +84,18 @@ export function SystemStatusProvider({ children }: { children: ReactNode }) {
 
 	return (
 		<SystemStatusContext.Provider
-			value={{ health, aiHealth, backendStatus, lastChecked, checked: lastChecked !== null, isStarting, hasInitialCheckCompleted, isChecking, checkHealth }}
+			value={{
+				health,
+				aiHealth,
+				backendStatus,
+				lastChecked,
+				checked: lastChecked !== null,
+				isStarting,
+				hasInitialCheckCompleted,
+				isChecking,
+				checkHealth,
+				reportAIError,
+			}}
 		>
 			{children}
 		</SystemStatusContext.Provider>

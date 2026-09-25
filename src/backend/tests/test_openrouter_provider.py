@@ -192,6 +192,16 @@ def test_openrouter_provider_classifies_invalid_api_key():
     assert str(classified) == "The OpenRouter API key is invalid. Ask the administrator to replace it."
 
 
+def test_openrouter_provider_classifies_credits_exhausted():
+    error = type("FakeOpenRouterError", (Exception,), {"status_code": 402, "message": "User has insufficient credits"})()
+
+    classified = classify_openrouter_error(error)
+
+    assert isinstance(classified, AIProviderError)
+    assert classified.code == "credits_exhausted"
+    assert str(classified) == "OpenRouter credits or the configured key limit have been exhausted."
+
+
 def test_openrouter_provider_rejects_malformed_json():
     class MalformedClient(FakeClient):
         def create_chat(self, **kwargs):
@@ -211,3 +221,4 @@ def test_cosine_similarity_is_bounded_and_validates_dimensions():
 
     with pytest.raises(EmbeddingError):
         cosine_similarity([1.0], [1.0, 0.0])
+

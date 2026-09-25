@@ -48,7 +48,7 @@ export default function JobsPage() {
 	};
 
 	const handleStartEvaluation = (jobId: string) => {
-		navigate(`/?jobId=${jobId}`);
+		navigate(`/evaluations?jobId=${jobId}`);
 	};
 
 	const startEditing = (job: CreateJobResponse) => {

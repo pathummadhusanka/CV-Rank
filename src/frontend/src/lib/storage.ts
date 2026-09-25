@@ -13,14 +13,99 @@ export interface EvaluationProject {
 	results: RankedCandidate[];
 }
 
+const DEFAULT_SEED_PROJECTS: EvaluationProject[] = [
+	{
+		id: "seed-project-ai-intern",
+		name: "AI Intern Initial Screening",
+		createdAt: "2026-09-25T00:00:00.000Z",
+		job: {
+			id: "seed-job-ai-intern",
+			title: "AI Intern",
+			description:
+				"We are looking for an AI Intern with Python and machine learning experience.\n\nRequirements:\n\n- Python\n- Machine Learning\n- SQL\n- Git\n- Docker\n- At least 1 year of experience\n- Bachelor's degree in Computer Science or a related field",
+			status: "active",
+			requirements: {
+				skills: ["python", "machine learning", "sql", "git", "docker"],
+				experience_years: 1,
+				education: "Bachelor's degree in Computer Science or a related field",
+			},
+		},
+		candidates: [
+			{
+				id: "seed-cv-alex",
+				filename: "candidate_001_alex_perera.pdf",
+				size: 10240,
+			},
+			{
+				id: "seed-cv-jamie",
+				filename: "candidate_002_jamie_silva.pdf",
+				size: 10240,
+			},
+		],
+		results: [
+			{
+				id: "seed-cv-alex",
+				filename: "candidate_001_alex_perera.pdf",
+				candidateName: "Alex Perera",
+				rank: 1,
+				fitScore: 92,
+				scoreBreakdown: {
+					requiredSkills: 100,
+					preferredSkills: 80,
+					experience: 100,
+					semanticSimilarity: 90,
+				},
+				matches: [
+					{
+						requirement: "Python",
+						category: "skill",
+						weight: 1.0,
+						status: "strong",
+						evidence: "Python developer with SQL, Docker, Git, and machine learning projects.",
+					},
+				],
+				strengths: ["Python", "Machine Learning", "SQL", "Docker"],
+				gaps: [],
+				explanation: "Strong fit meeting all core requirements.",
+			},
+			{
+				id: "seed-cv-jamie",
+				filename: "candidate_002_jamie_silva.pdf",
+				candidateName: "Jamie Silva",
+				rank: 2,
+				fitScore: 68,
+				scoreBreakdown: {
+					requiredSkills: 60,
+					preferredSkills: 50,
+					experience: 100,
+					semanticSimilarity: 72,
+				},
+				matches: [
+					{
+						requirement: "Python",
+						category: "skill",
+						weight: 1.0,
+						status: "strong",
+						evidence: "Backend developer with Python, FastAPI, PostgreSQL, SQL, Docker, and Git experience.",
+					},
+				],
+				strengths: ["Python", "SQL", "Docker"],
+				gaps: ["Missing machine learning project experience"],
+				explanation: "Partial fit lacking specific ML experience.",
+			},
+		],
+	},
+];
+
 export function getStoredProjects(): EvaluationProject[] {
 	try {
 		const raw = localStorage.getItem(PROJECTS_STORAGE_KEY);
-		if (!raw) return [];
+		if (!raw) return DEFAULT_SEED_PROJECTS;
 		const parsed = JSON.parse(raw);
-		return Array.isArray(parsed) ? parsed : [];
+		if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_SEED_PROJECTS;
+		return parsed;
 	} catch {
-		return [];
+		return DEFAULT_SEED_PROJECTS;
 	}
 }
 
@@ -49,4 +134,3 @@ export function getStoredProjectById(projectId: string): EvaluationProject | nul
 	const projects = getStoredProjects();
 	return projects.find((p) => p.id === projectId) ?? null;
 }
-

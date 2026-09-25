@@ -3,10 +3,11 @@ import { useSystemStatus } from "@/components/SystemStatusContext";
 type StatusItem = {
 	label: string;
 	severity: "warning" | "error";
+	hint?: string;
 };
 
 export function SystemStatusWarningBar() {
-	const { health, aiHealth, checked, isStarting, hasInitialCheckCompleted, isChecking, checkHealth } = useSystemStatus();
+	const { health, aiHealth, checked, isStarting, hasInitialCheckCompleted, isChecking } = useSystemStatus();
 	const isSettingUp = isStarting && !hasInitialCheckCompleted;
 
 	if (isSettingUp || isStarting || isChecking) {
@@ -26,7 +27,11 @@ export function SystemStatusWarningBar() {
 		issues.push({ label: "System service is unavailable", severity: "error" });
 	}
 	if (!aiHealth) {
-		issues.push({ label: "OpenRouter status could not be checked", severity: "warning" });
+		issues.push({
+			label: "OpenRouter status could not be checked",
+			severity: "warning",
+			hint: "Replace your new API KEY using env file",
+		});
 	} else if (aiHealth.status !== "ready") {
 		const configurationIssue = [
 			"missing_api_key",
@@ -38,6 +43,7 @@ export function SystemStatusWarningBar() {
 		issues.push({
 			label: aiHealth.message,
 			severity: configurationIssue ? "error" : "warning",
+			hint: "Replace your new API KEY using env file",
 		});
 	}
 
@@ -57,18 +63,16 @@ export function SystemStatusWarningBar() {
 			role="alert"
 		>
 			<div className="mx-auto flex max-w-7xl items-center justify-center gap-3 text-center">
-				<p className="min-w-0 truncate">
+				<p className="min-w-0">
 					<strong>{hasError ? "System issue:" : "System warning:"}</strong>{" "}
 					{issues[0].label}
+					{issues[0].hint && (
+						<span className="ml-1.5 opacity-90 font-normal">
+							(Hint: {issues[0].hint})
+						</span>
+					)}
 					{extraCount > 0 && <span className="font-semibold"> + {extraCount} {extraLabel}</span>}
 				</p>
-				<button
-					type="button"
-					onClick={checkHealth}
-					className="shrink-0 font-semibold underline underline-offset-2 hover:no-underline"
-				>
-					Check again
-				</button>
 			</div>
 		</div>
 	);

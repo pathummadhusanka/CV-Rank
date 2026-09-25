@@ -122,26 +122,32 @@ export interface AIAnalysisResponse {
 
 export class ApiError extends Error {
 	status: number;
+	code?: string;
 
-	constructor(status: number, message: string) {
+	constructor(status: number, message: string, code?: string) {
 		super(message);
 		this.name = "ApiError";
 		this.status = status;
+		this.code = code;
 	}
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {
 	if (!res.ok) {
 		let message = `Request failed with status ${res.status}`;
+		let code: string | undefined;
 		try {
 			const data = await res.json();
 			if (data && typeof data.detail === "string") {
 				message = data.detail;
 			}
+			if (data && typeof data.code === "string") {
+				code = data.code;
+			}
 		} catch {
 			// ignore json parse error, keep default status message
 		}
-		throw new ApiError(res.status, message);
+		throw new ApiError(res.status, message, code);
 	}
 	if (res.status === 204) {
 		return undefined as T;

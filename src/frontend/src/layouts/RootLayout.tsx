@@ -23,10 +23,10 @@ export default function RootLayout() {
 					</div>
 
 					<nav className="order-3 flex w-full min-w-0 flex-wrap items-center justify-center gap-1.5 overflow-visible sm:order-none sm:w-auto sm:flex-nowrap lg:absolute lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
-						<NavLink to="/" end className={({ isActive }) => cn("shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors", isActive ? "bg-secondary text-secondary-foreground font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/60")}>Evaluations</NavLink>
+						<NavLink to="/dashboard" className={({ isActive }) => cn("shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors", isActive ? "bg-secondary text-secondary-foreground font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/60")}>Dashboard</NavLink>
+						<NavLink to="/evaluations" className={({ isActive }) => cn("shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors", isActive ? "bg-secondary text-secondary-foreground font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/60")}>Evaluator</NavLink>
 						<NavLink to="/jobs" className={({ isActive }) => cn("shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors", isActive ? "bg-secondary text-secondary-foreground font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/60")}>Jobs Library</NavLink>
 						<NavLink to="/cvs" className={({ isActive }) => cn("shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors", isActive ? "bg-secondary text-secondary-foreground font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/60")}>CV Library</NavLink>
-						<NavLink to="/dashboard" className={({ isActive }) => cn("shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors", isActive ? "bg-secondary text-secondary-foreground font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/60")}>Dashboard</NavLink>
 					</nav>
 
 					<div className="flex shrink-0 items-center justify-end gap-2 sm:flex-1">
