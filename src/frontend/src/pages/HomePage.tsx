@@ -3,7 +3,8 @@ import { NavLink, useSearchParams } from "react-router";
 import { LibrarySearchModal } from "@/components/LibrarySearchModal";
 import { CandidateEvidenceModal } from "@/components/CandidateEvidenceModal";
 import { CandidateLeaderboard } from "@/components/CandidateLeaderboard";
-import { CVUploader, type UploadedCandidate } from "@/components/CVUploader";
+import type { UploadedCandidate } from "@/components/CVUploader";
+import { UploadCVModal } from "@/components/UploadCVModal";
 import { JobCreator } from "@/components/JobCreator";
 import { JobRequirementsCard } from "@/components/JobRequirementsCard";
 import { Button } from "@/components/ui/button";
@@ -36,9 +37,9 @@ export default function HomePage() {
 	const [libraryCVs, setLibraryCVs] = useState<CVSummary[]>([]);
 	const [storedBatches, setStoredBatches] = useState<CVBatch[]>(() => getStoredBatches());
 	const [selectedLibraryIds, setSelectedLibraryIds] = useState<string[]>([]);
-	const [uploadedCandidates, setUploadedCandidates] = useState<UploadedCandidate[]>([]);
 	const [activeJob, setActiveJob] = useState<CreateJobResponse | null>(null);
 	const [showNewJobForm, setShowNewJobForm] = useState(false);
+	const [showUploadModal, setShowUploadModal] = useState(false);
 	const [analysisError, setAnalysisError] = useState<string | null>(null);
 	const [candidates, setCandidates] = useState<UploadedCandidate[]>([]);
 	const [rankedResults, setRankedResults] = useState<RankedCandidate[]>([]);
@@ -254,15 +255,27 @@ export default function HomePage() {
 		setSearchParams({ projectId: newProject.id });
 	};
 
-	const handleCandidatesChange = (updated: UploadedCandidate[]) => {
-		setUploadedCandidates(updated);
-		const selectedCandidates: UploadedCandidate[] = libraryCVs
-			.filter((cv) => selectedLibraryIds.includes(cv.id))
-			.map((cv) => ({ id: cv.id, filename: cv.filename, size: 0 }));
-		setCandidates([...selectedCandidates, ...updated]);
-		setRankedResults([]);
-		setAnalysisError(null);
-		setIsProjectSaved(false);
+	const handleUploadCandidatesChange = async (newUploaded: UploadedCandidate[]) => {
+		try {
+			const updatedCVs = await getCVs();
+			setLibraryCVs(updatedCVs);
+			setStoredBatches(sanitizeStoredBatches(updatedCVs.map((cv) => cv.id)));
+
+			const newCVIds = newUploaded.map((u) => u.id);
+			const mergedSelectedIds = Array.from(new Set([...selectedLibraryIds, ...newCVIds]));
+			setSelectedLibraryIds(mergedSelectedIds);
+
+			const selectedCandidates: UploadedCandidate[] = updatedCVs
+				.filter((cv) => mergedSelectedIds.includes(cv.id))
+				.map((cv) => ({ id: cv.id, filename: cv.filename, size: 0 }));
+
+			setCandidates(selectedCandidates);
+			setRankedResults([]);
+			setAnalysisError(null);
+			setIsProjectSaved(false);
+		} catch {
+			// Ignore fetch errors
+		}
 	};
 
 	const handleResetJob = () => {
@@ -358,12 +371,17 @@ export default function HomePage() {
 
 			<section className="space-y-4">
 				<div className="rounded-xl border border-border bg-card p-6 shadow-xs space-y-4">
-					<div className="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-3">
 						<div>
 							<h3 className="text-base font-bold text-foreground">Step 2: Choose From CV Library &amp; Batches</h3>
 							<p className="text-xs text-muted-foreground">Select individual CVs or pick entire pre-saved CV Batches for this evaluation.</p>
 						</div>
-						<NavLink to="/cvs" className="text-xs font-semibold text-primary hover:underline">Manage Library &amp; Batches</NavLink>
+						<div className="flex items-center gap-2">
+							<Button size="sm" onClick={() => setShowUploadModal(true)}>
+								+ Upload New Resumes
+							</Button>
+							<NavLink to="/cvs" className="text-xs font-semibold text-primary hover:underline">Manage Library &amp; Batches</NavLink>
+						</div>
 					</div>
 
 					{/* Saved CV Batches */}
@@ -408,7 +426,12 @@ export default function HomePage() {
 
 					{/* Individual Library CVs */}
 					{libraryCVs.length === 0 ? (
-						<p className="pt-2 text-xs text-muted-foreground">No stored CVs yet. Upload one below.</p>
+						<div className="rounded-lg border border-dashed border-border p-6 text-center space-y-2">
+							<p className="text-xs text-muted-foreground">No stored CVs in the system library yet.</p>
+							<Button size="sm" variant="outline" onClick={() => setShowUploadModal(true)}>
+								+ Upload Resumes to Library
+							</Button>
+						</div>
 					) : (
 						<div className="space-y-2">
 							<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Individual CV Resumes</span>
@@ -435,8 +458,6 @@ export default function HomePage() {
 						</div>
 					)}
 				</div>
-
-				<CVUploader onCandidatesChange={handleCandidatesChange} />
 			</section>
 
 			{activeJob && candidates.length > 0 && rankedResults.length === 0 && (
@@ -493,6 +514,13 @@ export default function HomePage() {
 			)}
 
 			<CandidateEvidenceModal candidate={selectedCandidate} onClose={() => setSelectedCandidate(null)} />
+
+			{showUploadModal && (
+				<UploadCVModal
+					onCandidatesChange={handleUploadCandidatesChange}
+					onClose={() => setShowUploadModal(false)}
+				/>
+			)}
 
 			{searchModalMode && (
 				<LibrarySearchModal
