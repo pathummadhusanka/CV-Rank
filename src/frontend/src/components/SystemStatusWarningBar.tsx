@@ -6,6 +6,23 @@ type StatusItem = {
 	hint?: string;
 };
 
+function getHintForAIStatus(status: string | undefined): string {
+	switch (status) {
+		case "missing_api_key":
+		case "invalid_api_key":
+		case "forbidden":
+		case "credits_exhausted":
+		case "unsupported_provider":
+			return "Replace your new API KEY using env file";
+		case "rate_limited":
+			return "Wait a moment before making more AI requests";
+		case "provider_unavailable":
+			return "Check your internet connection or OpenRouter status";
+		default:
+			return "Replace your new API KEY using env file";
+	}
+}
+
 export function SystemStatusWarningBar() {
 	const { health, aiHealth, checked, isStarting, hasInitialCheckCompleted, isChecking } = useSystemStatus();
 	const isSettingUp = isStarting && !hasInitialCheckCompleted;
@@ -24,13 +41,17 @@ export function SystemStatusWarningBar() {
 
 	const issues: StatusItem[] = [];
 	if (!health || health.status !== "ok") {
-		issues.push({ label: "System service is unavailable", severity: "error" });
+		issues.push({
+			label: "System service is unavailable",
+			severity: "error",
+			hint: "Ensure backend server is running",
+		});
 	}
 	if (!aiHealth) {
 		issues.push({
 			label: "OpenRouter status could not be checked",
 			severity: "warning",
-			hint: "Replace your new API KEY using env file",
+			hint: getHintForAIStatus(undefined),
 		});
 	} else if (aiHealth.status !== "ready") {
 		const configurationIssue = [
@@ -43,7 +64,7 @@ export function SystemStatusWarningBar() {
 		issues.push({
 			label: aiHealth.message,
 			severity: configurationIssue ? "error" : "warning",
-			hint: "Replace your new API KEY using env file",
+			hint: getHintForAIStatus(aiHealth.status),
 		});
 	}
 
