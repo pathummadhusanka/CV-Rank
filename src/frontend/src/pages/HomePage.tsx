@@ -325,13 +325,7 @@ export default function HomePage() {
 												className="cursor-pointer space-y-1.5 rounded-lg border border-border/80 bg-background p-4 text-left transition-all hover:border-primary/50 hover:bg-muted/30"
 											>
 												<div className="text-sm font-bold text-foreground">{job.title}</div>
-												<div className="flex flex-wrap gap-1">
-													{job.requirements.skills.slice(0, 4).map((skill) => (
-														<span key={skill} className="rounded bg-secondary px-1.5 py-0.5 text-[10px] capitalize text-secondary-foreground">
-															{skill}
-														</span>
-													))}
-												</div>
+												<p className="text-xs text-muted-foreground line-clamp-2">{job.description}</p>
 											</button>
 										))}
 										<button

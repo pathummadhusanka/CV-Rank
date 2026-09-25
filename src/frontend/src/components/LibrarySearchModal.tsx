@@ -179,13 +179,7 @@ export function LibrarySearchModal({
 													<strong className="text-foreground truncate">{job.title}</strong>
 													{isSelected && <span className="text-[10px] font-bold text-primary">Selected</span>}
 												</div>
-												<div className="flex flex-wrap gap-1 mt-1.5">
-													{job.requirements.skills.slice(0, 3).map((skill) => (
-														<span key={skill} className="rounded bg-muted px-1.5 py-0.2 text-[10px] capitalize">
-															{skill}
-														</span>
-													))}
-												</div>
+												<p className="text-[11px] text-muted-foreground line-clamp-2 mt-1">{job.description}</p>
 											</button>
 										);
 									})}
