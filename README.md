@@ -1,6 +1,6 @@
 # CV-Rank — AI Candidate Evaluation & Ranking System
 
-<img width="1920" height="1020" alt="CV-Rank Application Preview" src="https://github.com/user-attachments/assets/3e01d81b-2539-480d-b2de-5ca73dd04999" />
+<img width="1900" height="875" alt="image" src="https://github.com/user-attachments/assets/15fe2a87-a692-46b4-afe5-6fbef49d673e" />
 
 **CV-Rank** is an intelligent candidate screening application designed for hiring managers and recruiters. It analyzes candidate PDF resumes against job descriptions using a modern hybrid AI pipeline:
 
