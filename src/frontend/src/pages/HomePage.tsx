@@ -11,6 +11,7 @@ import { evaluateCandidatesLive } from "@/lib/rankingEngine";
 import {
 	getStoredBatches,
 	getStoredProjectById,
+	sanitizeStoredBatches,
 	saveStoredProject,
 	type CVBatch,
 	type EvaluationProject,
@@ -54,8 +55,12 @@ export default function HomePage() {
 	const [searchModalMode, setSearchModalMode] = useState<"jobs" | "cvs" | "batches" | "all" | null>(null);
 
 	useEffect(() => {
-		setStoredBatches(getStoredBatches());
-		getCVs().then(setLibraryCVs).catch(() => setLibraryCVs([]));
+		getCVs()
+			.then((cvs) => {
+				setLibraryCVs(cvs);
+				setStoredBatches(sanitizeStoredBatches(cvs.map((cv) => cv.id)));
+			})
+			.catch(() => setLibraryCVs([]));
 		getJobs()
 			.then((jobs) => {
 				setStoredJobs(jobs);

@@ -156,6 +156,30 @@ export function getStoredBatches(): CVBatch[] {
 	}
 }
 
+export function sanitizeStoredBatches(validCVIds: string[]): CVBatch[] {
+	const current = getStoredBatches();
+	const validSet = new Set(validCVIds);
+	const sanitized: CVBatch[] = [];
+
+	for (const batch of current) {
+		const validBatchCVIds = batch.cvIds.filter((id) => validSet.has(id));
+		if (validBatchCVIds.length > 0) {
+			sanitized.push({
+				...batch,
+				cvIds: validBatchCVIds,
+			});
+		}
+	}
+
+	try {
+		localStorage.setItem(BATCHES_STORAGE_KEY, JSON.stringify(sanitized));
+	} catch {
+		// Ignore storage write errors
+	}
+
+	return sanitized;
+}
+
 export function saveStoredBatch(batch: CVBatch): CVBatch[] {
 	const current = getStoredBatches();
 	const existingIndex = current.findIndex((b) => b.id === batch.id);

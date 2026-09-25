@@ -5,7 +5,7 @@ import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 import { CreateBatchModal } from "@/components/CreateBatchModal";
 import { CVUploader } from "@/components/CVUploader";
 import { deleteCV, getCVs, type CVSummary } from "@/lib/api";
-import { deleteStoredBatch, getStoredBatches, saveStoredBatch, type CVBatch } from "@/lib/storage";
+import { deleteStoredBatch, getStoredBatches, sanitizeStoredBatches, saveStoredBatch, type CVBatch } from "@/lib/storage";
 
 function DocumentIcon({ className = "size-3" }: { className?: string }) {
 	return (
@@ -30,7 +30,9 @@ export default function CVLibraryPage() {
 
 	const refreshCVs = async () => {
 		try {
-			setCVs(await getCVs());
+			const fetched = await getCVs();
+			setCVs(fetched);
+			setBatches(sanitizeStoredBatches(fetched.map((cv) => cv.id)));
 		} catch {
 			setCVs([]);
 		}
@@ -40,8 +42,10 @@ export default function CVLibraryPage() {
 		if (!pendingDeleteIds) return;
 		setIsDeleting(true);
 		await Promise.all(pendingDeleteIds.map((cvId) => deleteCV(cvId)));
-		setCVs((currentCVs) => currentCVs.filter((cv) => !pendingDeleteIds.includes(cv.id)));
+		const remaining = cvs.filter((cv) => !pendingDeleteIds.includes(cv.id));
+		setCVs(remaining);
 		setSelectedCVIds((currentIds) => currentIds.filter((id) => !pendingDeleteIds.includes(id)));
+		setBatches(sanitizeStoredBatches(remaining.map((cv) => cv.id)));
 		setPendingDeleteIds(null);
 		setIsDeleting(false);
 	};
