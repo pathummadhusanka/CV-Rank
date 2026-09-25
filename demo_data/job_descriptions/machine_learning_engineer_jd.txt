@@ -1,0 +1,43 @@
+Machine Learning Engineer
+
+Company: DataForge AI
+Location: Colombo, Sri Lanka
+Employment Type: Full-time
+
+About the Role
+
+We are looking for a Machine Learning Engineer to develop, evaluate, and deploy machine learning solutions for real-world applications. The role involves working with structured and unstructured data, building ML pipelines, and integrating trained models into production systems.
+
+Responsibilities
+
+- Develop and train machine learning models for classification, regression, and prediction tasks.
+- Process, clean, and analyze large datasets.
+- Build data preprocessing and machine learning pipelines.
+- Evaluate models using appropriate metrics and validation techniques.
+- Experiment with different algorithms and improve model performance.
+- Develop NLP-based solutions for text and document processing.
+- Deploy machine learning models as production services.
+- Build REST APIs for model inference.
+- Containerize ML applications using Docker.
+- Monitor and troubleshoot deployed ML systems.
+- Collaborate with software engineers and data scientists.
+
+Requirements
+
+- 2+ years of experience in machine learning or a related field.
+- Strong Python programming skills.
+- Experience with scikit-learn and/or PyTorch.
+- Strong knowledge of pandas and NumPy.
+- Practical experience with machine learning model evaluation.
+- Experience with NLP or other deep learning applications.
+- Understanding of data preprocessing and feature engineering.
+- Experience deploying machine learning models.
+- Familiarity with REST APIs and Docker.
+- Experience with Git and software development practices.
+
+Nice to Have
+
+- Experience with Hugging Face Transformers.
+- Experience with cloud platforms such as AWS or GCP.
+- Experience with MLOps or CI/CD pipelines.
+- Experience working with large-scale datasets.
