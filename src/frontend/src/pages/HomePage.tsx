@@ -287,28 +287,6 @@ export default function HomePage() {
 				</section>
 			)}
 
-			{candidates.length > 0 && (!activeJob || isChoosingJob) && (
-				<section className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-					<div className="flex items-center gap-2">
-						<span className="size-2 rounded-full bg-primary animate-pulse" />
-						<div>
-							<strong className="text-foreground font-bold">Attached Candidate Pool:</strong>{" "}
-							<span className="text-muted-foreground">{candidates.length} candidate CV{candidates.length === 1 ? "" : "s"} attached. Select a job role below to run evaluation.</span>
-						</div>
-					</div>
-					<div className="flex items-center gap-1.5 flex-wrap">
-						{candidates.slice(0, 3).map((c) => (
-							<span key={c.id} className="rounded border border-primary/20 bg-background px-2 py-0.5 font-medium text-foreground text-[11px] truncate max-w-[160px]">
-								📄 {c.filename}
-							</span>
-						))}
-						{candidates.length > 3 && (
-							<span className="text-muted-foreground text-[11px] font-semibold">+{candidates.length - 3} more</span>
-						)}
-					</div>
-				</section>
-			)}
-
 			<section>
 				{!activeJob || isChoosingJob ? (
 					<div className="space-y-4">
