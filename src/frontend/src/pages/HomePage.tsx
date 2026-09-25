@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, useSearchParams } from "react-router";
+import { LibrarySearchModal } from "@/components/LibrarySearchModal";
 import { CandidateEvidenceModal } from "@/components/CandidateEvidenceModal";
 import { CandidateLeaderboard } from "@/components/CandidateLeaderboard";
 import { CVUploader, type UploadedCandidate } from "@/components/CVUploader";
@@ -42,6 +43,7 @@ export default function HomePage() {
 	const [reviewedRequirements, setReviewedRequirements] = useState<AIRequirement[] | null>(null);
 	const [requirementsLoading, setRequirementsLoading] = useState(false);
 	const [requirementsError, setRequirementsError] = useState<string | null>(null);
+	const [searchModalMode, setSearchModalMode] = useState<"jobs" | "cvs" | "batches" | "all" | null>(null);
 
 	useEffect(() => {
 		setStoredBatches(getStoredBatches());
@@ -305,7 +307,7 @@ export default function HomePage() {
 										Select a position from your jobs library to evaluate candidate resumes against:
 									</p>
 									<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-										{storedJobs.map((job) => (
+										{storedJobs.slice(0, 3).map((job) => (
 											<button
 												key={job.id}
 												type="button"
@@ -322,6 +324,14 @@ export default function HomePage() {
 												</div>
 											</button>
 										))}
+										<button
+											type="button"
+											onClick={() => setSearchModalMode("jobs")}
+											className="cursor-pointer space-y-1 rounded-lg border border-dashed border-primary/40 bg-primary/5 p-4 text-center transition-all hover:border-primary hover:bg-primary/10 flex flex-col items-center justify-center min-h-[76px]"
+										>
+											<span className="text-xs font-bold text-primary">🔍 Search and add from library</span>
+											<span className="text-[11px] text-muted-foreground">Pick from all {storedJobs.length} job roles</span>
+										</button>
 									</div>
 								</div>
 							)}
@@ -354,7 +364,7 @@ export default function HomePage() {
 						<div className="space-y-2">
 							<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Pre-saved CV Batches</span>
 							<div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-								{storedBatches.map((batch) => {
+								{storedBatches.slice(0, 3).map((batch) => {
 									const allInBatchSelected = batch.cvIds.length > 0 && batch.cvIds.every((id) => selectedLibraryIds.includes(id));
 
 									return (
@@ -377,6 +387,13 @@ export default function HomePage() {
 										</label>
 									);
 								})}
+								<button
+									type="button"
+									onClick={() => setSearchModalMode("batches")}
+									className="cursor-pointer rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3 text-center transition-all hover:border-primary hover:bg-primary/10 flex items-center justify-center gap-2 min-h-[48px]"
+								>
+									<span className="text-xs font-bold text-primary">🔍 Search and add from library</span>
+								</button>
 							</div>
 						</div>
 					)}
@@ -388,7 +405,7 @@ export default function HomePage() {
 						<div className="space-y-2">
 							<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Individual CV Resumes</span>
 							<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-								{libraryCVs.map((cv) => (
+								{libraryCVs.slice(0, 3).map((cv) => (
 									<label key={cv.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/80 p-3 hover:bg-muted/30">
 										<input
 											type="checkbox"
@@ -398,6 +415,13 @@ export default function HomePage() {
 										<span className="min-w-0 truncate text-xs font-medium text-foreground">{cv.filename}</span>
 									</label>
 								))}
+								<button
+									type="button"
+									onClick={() => setSearchModalMode("cvs")}
+									className="cursor-pointer rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3 text-center transition-all hover:border-primary hover:bg-primary/10 flex items-center justify-center gap-2 min-h-[44px]"
+								>
+									<span className="text-xs font-bold text-primary">🔍 Search and add from library</span>
+								</button>
 							</div>
 						</div>
 					)}
@@ -460,6 +484,21 @@ export default function HomePage() {
 			)}
 
 			<CandidateEvidenceModal candidate={selectedCandidate} onClose={() => setSelectedCandidate(null)} />
+
+			{searchModalMode && (
+				<LibrarySearchModal
+					initialMode={searchModalMode}
+					jobs={storedJobs}
+					cvs={libraryCVs}
+					batches={storedBatches}
+					selectedJobId={activeJob?.id}
+					selectedCVIds={selectedLibraryIds}
+					onSelectJob={handleSelectJob}
+					onToggleCV={handleLibrarySelection}
+					onToggleBatch={handleBatchToggle}
+					onClose={() => setSearchModalMode(null)}
+				/>
+			)}
 		</div>
 	);
 }
