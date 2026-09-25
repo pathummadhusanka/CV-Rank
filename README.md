@@ -12,7 +12,7 @@
 
 ---
 
-## 🚀 Quick Start Guide (For Non-Technical Users)
+## 🚀 Quick Start Guide 
 
 Follow these simple steps to set up and run CV-Rank on your computer.
 
@@ -37,21 +37,26 @@ OpenRouter provides access to AI models for resume analysis.
 
 ### Step 2: Configure Your Environment File (`.env`)
 
-1. Open a terminal or Command Prompt in the `CV-Rank` project folder:
-   - **Windows (Command Prompt / PowerShell)**:
-     ```cmd
-     copy .env.example .env
-     ```
-   - **Mac / Linux**:
-     ```bash
-     cp .env.example .env
-     ```
-2. Open the newly created `.env` file in Notepad, VS Code, or any text editor.
+1. Create a copy of `.env.example` named `.env` (or `.env.local`):
+   - **Using Terminal**:
+     - **Windows (Command Prompt / PowerShell)**:
+       ```cmd
+       copy .env.example .env
+       ```
+     - **Mac / Linux**:
+       ```bash
+       cp .env.example .env
+       ```
+   - **Manual Copy (If command line copy doesn't work)**:
+     - Open File Explorer (Windows) or Finder (Mac) in the `CV-Rank` project folder.
+     - Copy `.env.example` and paste it in the same directory.
+     - Rename the new file to `.env` (or `.env.local`). *(Note: On Windows, make sure hidden files and file extensions are visible if `.env` does not show up)*.
+2. Open the newly created `.env` (or `.env.local`) file in Notepad, TextEdit, VS Code, or any text editor.
 3. Find the line `AI_API_KEY=` and paste your OpenRouter key after the equals sign:
    ```env
    AI_API_KEY=sk-or-v1-your-actual-openrouter-key-here
    ```
-4. Save and close the `.env` file.
+4. Save and close the file.
 
 ---
 
@@ -91,8 +96,10 @@ When you are done using CV-Rank:
 
 - **"Docker is not running or command not found"**:  
   Make sure Docker Desktop is launched and the whale icon is visible in your system tray or taskbar.
+- **"Cannot copy or find `.env` file"**:  
+  If terminal copy commands (`copy` / `cp`) fail or behave unexpectedly, simply copy `.env.example` manually in File Explorer or Finder, and rename it to `.env` (or `.env.local`). On Windows, ensure hidden files and file extensions are turned on in File Explorer View settings.
 - **"AI Key or Service Unavailable Error"**:  
-  Check your `.env` file to confirm `AI_API_KEY` is pasted correctly without extra spaces or quotes. You can verify key status anytime on the **Developer Options** page in the application.
+  Check your `.env` (or `.env.local`) file to confirm `AI_API_KEY` is pasted correctly without extra spaces or quotes. You can verify key status anytime on the **Developer Options** page in the application.
 - **"Port 3000 is already in use"**:  
   Close any other applications running on port 3000 or restart Docker Desktop.
 
