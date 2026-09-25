@@ -22,7 +22,7 @@ export default function RootLayout() {
 						</NavLink>
 					</div>
 
-					<nav className="order-3 flex w-full min-w-0 flex-wrap items-center justify-center gap-1.5 overflow-visible sm:order-none sm:w-auto sm:flex-nowrap lg:absolute lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2">
+					<nav className="order-3 flex w-full min-w-0 flex-wrap items-center justify-center gap-1.5 overflow-visible sm:order-none sm:w-auto sm:flex-nowrap lg:absolute lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 z-20 pointer-events-auto">
 						<NavLink to="/dashboard" className={({ isActive }) => cn("shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors", isActive ? "bg-secondary text-secondary-foreground font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/60")}>Dashboard</NavLink>
 						<NavLink to="/evaluations" className={({ isActive }) => cn("shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors", isActive ? "bg-secondary text-secondary-foreground font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/60")}>Evaluator</NavLink>
 						<NavLink to="/jobs" className={({ isActive }) => cn("shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors", isActive ? "bg-secondary text-secondary-foreground font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/60")}>Jobs Library</NavLink>

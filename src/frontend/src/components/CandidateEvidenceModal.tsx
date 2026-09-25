@@ -9,12 +9,13 @@ interface CandidateEvidenceModalProps {
 
 export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidenceModalProps) {
 	useEffect(() => {
+		if (!candidate) return;
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === "Escape") onClose();
 		};
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [onClose]);
+	}, [candidate, onClose]);
 
 	if (!candidate) return null;
 
@@ -54,14 +55,20 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 	};
 
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-xs animate-in fade-in duration-200">
-			<div
-				className="fixed inset-0"
+		<div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/80 backdrop-blur-xs animate-in fade-in duration-200">
+			<button
+				type="button"
+				className="fixed inset-0 cursor-default"
 				onClick={onClose}
-				aria-hidden="true"
+				aria-label="Close evidence breakdown"
 			/>
 
-			<div className="relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-xl border border-border bg-card shadow-2xl overflow-hidden z-10">
+			<div
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="candidate-evidence-title"
+				className="relative z-10 w-full max-w-2xl max-h-[85vh] flex flex-col rounded-xl border border-border bg-card shadow-2xl overflow-hidden"
+			>
 				{/* Modal Header */}
 				<div className="p-6 border-b border-border/80 flex items-start justify-between gap-4 bg-muted/20">
 					<div className="space-y-1">
@@ -73,7 +80,7 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 								ID: {candidate.id.slice(0, 8)}...
 							</span>
 						</div>
-						<h2 className="text-lg font-bold text-foreground">
+						<h2 id="candidate-evidence-title" className="text-lg font-bold text-foreground">
 							{candidate.candidateName || candidate.filename}
 						</h2>
 						{candidate.candidateName && (
