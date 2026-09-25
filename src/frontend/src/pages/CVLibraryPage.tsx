@@ -11,7 +11,6 @@ export default function CVLibraryPage() {
 	const navigate = useNavigate();
 	const [cvs, setCVs] = useState<CVSummary[]>([]);
 	const [selectedCVIds, setSelectedCVIds] = useState<string[]>([]);
-	const [isDeleteMode, setIsDeleteMode] = useState(false);
 	const [pendingDeleteIds, setPendingDeleteIds] = useState<string[] | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [batches, setBatches] = useState<CVBatch[]>(() => getStoredBatches());
@@ -35,7 +34,6 @@ export default function CVLibraryPage() {
 		await Promise.all(pendingDeleteIds.map((cvId) => deleteCV(cvId)));
 		setCVs((currentCVs) => currentCVs.filter((cv) => !pendingDeleteIds.includes(cv.id)));
 		setSelectedCVIds((currentIds) => currentIds.filter((id) => !pendingDeleteIds.includes(id)));
-		setIsDeleteMode(false);
 		setPendingDeleteIds(null);
 		setIsDeleting(false);
 	};
@@ -53,7 +51,6 @@ export default function CVLibraryPage() {
 		setBatches(updated);
 		setShowCreateBatchModal(false);
 		setSelectedCVIds([]);
-		setIsDeleteMode(false);
 	};
 
 	const handleDeleteBatch = (batchId: string) => {
@@ -65,35 +62,41 @@ export default function CVLibraryPage() {
 		navigate(`/evaluations?batchId=${batchId}`);
 	};
 
+	const toggleSelectAll = () => {
+		if (selectedCVIds.length === cvs.length) {
+			setSelectedCVIds([]);
+		} else {
+			setSelectedCVIds(cvs.map((cv) => cv.id));
+		}
+	};
+
 	return (
 		<div className="space-y-6">
+			{/* Page Header */}
 			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 				<div>
 					<h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">CV Library &amp; Batches</h1>
 					<p className="text-sm text-muted-foreground">Manage uploaded candidate CVs and group them into reusable evaluation batches.</p>
 				</div>
-				<div className="flex items-center gap-2">
+				<div className="flex flex-wrap items-center gap-2">
 					{selectedCVIds.length > 0 && (
-						<Button size="sm" onClick={() => setShowCreateBatchModal(true)}>
-							Create Batch ({selectedCVIds.length})
+						<>
+							<Button size="sm" onClick={() => setShowCreateBatchModal(true)}>
+								+ Create Batch ({selectedCVIds.length})
+							</Button>
+							<Button variant="destructive" size="sm" onClick={() => setPendingDeleteIds(selectedCVIds)}>
+								Delete Selected ({selectedCVIds.length})
+							</Button>
+							<Button variant="outline" size="sm" onClick={() => setSelectedCVIds([])}>
+								Clear Selection
+							</Button>
+						</>
+					)}
+					{cvs.length > 0 && selectedCVIds.length === 0 && (
+						<Button variant="outline" size="sm" onClick={toggleSelectAll}>
+							Select All ({cvs.length})
 						</Button>
 					)}
-					{isDeleteMode ? (
-						<>
-							<Button variant="outline" size="sm" onClick={() => { setIsDeleteMode(false); setSelectedCVIds([]); }}>
-								Cancel
-							</Button>
-							{selectedCVIds.length > 0 && (
-								<Button variant="destructive" size="sm" onClick={() => setPendingDeleteIds(selectedCVIds)}>
-									Delete Selected ({selectedCVIds.length})
-								</Button>
-							)}
-						</>
-					) : cvs.length > 0 ? (
-						<Button variant="destructive" size="sm" onClick={() => setIsDeleteMode(true)}>
-							Select / Delete
-						</Button>
-					) : null}
 				</div>
 			</div>
 
@@ -138,7 +141,7 @@ export default function CVLibraryPage() {
 
 									<div className="flex items-center justify-between border-t border-border/60 pt-3 text-xs">
 										<span className="text-[11px] text-muted-foreground">
-											{new Date(batch.createdAt).toLocaleDateString()}
+											Created {new Date(batch.createdAt).toLocaleDateString()}
 										</span>
 										<div className="flex items-center gap-2">
 											<Button variant="outline" size="sm" onClick={() => handleDeleteBatch(batch.id)}>
@@ -159,45 +162,66 @@ export default function CVLibraryPage() {
 			{/* CVs Grid */}
 			{cvs.length === 0 ? (
 				<div className="rounded-xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
-					No CVs have been uploaded yet.
+					No CVs have been uploaded yet. Use the dropzone below to upload candidate resumes.
 				</div>
 			) : (
 				<div className="space-y-3">
 					<div className="flex items-center justify-between text-xs text-muted-foreground px-1">
 						<span>All Resumes in Library ({cvs.length})</span>
-						{!isDeleteMode && (
-							<button type="button" onClick={() => setIsDeleteMode(true)} className="text-primary hover:underline font-medium cursor-pointer">
-								Enable checkboxes to create a batch or delete
-							</button>
-						)}
+						<button type="button" onClick={toggleSelectAll} className="text-primary hover:underline font-semibold cursor-pointer">
+							{selectedCVIds.length === cvs.length ? "Deselect All" : "Select All"}
+						</button>
 					</div>
+
 					<div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-						{cvs.map((cv) => (
-							<div key={cv.id} className="rounded-xl border border-border bg-card p-4">
-								<div className="flex items-start justify-between gap-3">
-									<div className="min-w-0">
-										{isDeleteMode && (
-											<label className="mb-2 flex items-center gap-2 text-xs text-muted-foreground font-medium cursor-pointer">
-												<input
-													type="checkbox"
-													checked={selectedCVIds.includes(cv.id)}
-													onChange={(event) => setSelectedCVIds((currentIds) => event.target.checked
-														? [...currentIds, cv.id]
-														: currentIds.filter((id) => id !== cv.id))}
-												/>
-												Select for Batch / Delete
-											</label>
-										)}
-										<h2 className="truncate text-sm font-bold text-foreground">{cv.filename}</h2>
-										<p className="mt-1 text-xs text-muted-foreground">Uploaded {new Date(cv.created_at).toLocaleString()}</p>
+						{cvs.map((cv) => {
+							const isSelected = selectedCVIds.includes(cv.id);
+
+							return (
+								<div
+									key={cv.id}
+									className={`rounded-xl border p-4 transition-all ${
+										isSelected
+											? "border-primary/50 bg-primary/5 shadow-xs"
+											: "border-border bg-card hover:border-border/80"
+									}`}
+								>
+									<div className="flex items-start justify-between gap-3">
+										<label className="flex items-start gap-3 min-w-0 cursor-pointer flex-1">
+											<input
+												type="checkbox"
+												checked={isSelected}
+												onChange={(event) =>
+													setSelectedCVIds((currentIds) =>
+														event.target.checked
+															? [...currentIds, cv.id]
+															: currentIds.filter((id) => id !== cv.id),
+													)
+												}
+												className="mt-1 shrink-0"
+											/>
+											<div className="min-w-0">
+												<h2 className="truncate text-sm font-bold text-foreground">{cv.filename}</h2>
+												<p className="mt-1 text-xs text-muted-foreground">Uploaded {new Date(cv.created_at).toLocaleString()}</p>
+											</div>
+										</label>
+
+										<div className="flex items-center gap-2 shrink-0">
+											<span className="rounded bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">{cv.status}</span>
+											<button
+												type="button"
+												onClick={() => setPendingDeleteIds([cv.id])}
+												className="text-muted-foreground hover:text-destructive p-1 rounded transition-colors text-base font-semibold cursor-pointer leading-none"
+												title="Delete CV"
+											>
+												&times;
+											</button>
+										</div>
 									</div>
-									<div className="flex items-center gap-2">
-										<span className="rounded bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">{cv.status}</span>
-									</div>
+									<p className="mt-3 text-xs text-muted-foreground pl-6">{cv.skills || "No detected skills"}</p>
 								</div>
-								<p className="mt-3 text-xs text-muted-foreground">{cv.skills || "No detected skills"}</p>
-							</div>
-						))}
+							);
+						})}
 					</div>
 				</div>
 			)}
