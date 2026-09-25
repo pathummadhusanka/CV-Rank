@@ -8,8 +8,10 @@ import { JobRequirementsCard } from "@/components/JobRequirementsCard";
 import { Button } from "@/components/ui/button";
 import { evaluateCandidatesLive } from "@/lib/rankingEngine";
 import {
+	getStoredBatches,
 	getStoredProjectById,
 	saveStoredProject,
+	type CVBatch,
 	type EvaluationProject,
 } from "@/lib/storage";
 import { useSystemStatus } from "@/components/SystemStatusContext";
@@ -22,6 +24,7 @@ export default function HomePage() {
 	const [storedJobs, setStoredJobs] = useState<CreateJobResponse[]>([]);
 	const [jobsLoaded, setJobsLoaded] = useState(false);
 	const [libraryCVs, setLibraryCVs] = useState<CVSummary[]>([]);
+	const [storedBatches, setStoredBatches] = useState<CVBatch[]>(() => getStoredBatches());
 	const [selectedLibraryIds, setSelectedLibraryIds] = useState<string[]>([]);
 	const [uploadedCandidates, setUploadedCandidates] = useState<UploadedCandidate[]>([]);
 	const [activeJob, setActiveJob] = useState<CreateJobResponse | null>(null);
@@ -41,6 +44,7 @@ export default function HomePage() {
 	const [requirementsError, setRequirementsError] = useState<string | null>(null);
 
 	useEffect(() => {
+		setStoredBatches(getStoredBatches());
 		getCVs().then(setLibraryCVs).catch(() => setLibraryCVs([]));
 		getJobs()
 			.then((jobs) => {
@@ -91,6 +95,19 @@ export default function HomePage() {
 	}, [activeJob?.id]);
 
 	useEffect(() => {
+		const batchId = searchParams.get("batchId");
+		if (batchId && libraryCVs.length > 0) {
+			const foundBatch = storedBatches.find((b) => b.id === batchId);
+			if (foundBatch) {
+				const batchCVIds = foundBatch.cvIds.filter((id) => libraryCVs.some((cv) => cv.id === id));
+				setSelectedLibraryIds(batchCVIds);
+				const selectedCandidates: UploadedCandidate[] = libraryCVs
+					.filter((cv) => batchCVIds.includes(cv.id))
+					.map((cv) => ({ id: cv.id, filename: cv.filename, size: 0 }));
+				setCandidates([...selectedCandidates, ...uploadedCandidates]);
+			}
+		}
+
 		const projectId = searchParams.get("projectId");
 		if (projectId) {
 			const project = getStoredProjectById(projectId);
@@ -117,7 +134,7 @@ export default function HomePage() {
 				setSearchParams({});
 			}
 		}
-	}, [searchParams, storedJobs, activeJob, jobsLoaded, isChoosingJob]);
+	}, [searchParams, storedJobs, activeJob, jobsLoaded, isChoosingJob, libraryCVs, storedBatches, uploadedCandidates]);
 
 	const handleSelectJob = (job: CreateJobResponse) => {
 		setActiveJob(job);
@@ -151,6 +168,24 @@ export default function HomePage() {
 		const nextIds = selected
 			? [...selectedLibraryIds, cvId]
 			: selectedLibraryIds.filter((id) => id !== cvId);
+		const selectedCandidates: UploadedCandidate[] = libraryCVs
+			.filter((cv) => nextIds.includes(cv.id))
+			.map((cv) => ({ id: cv.id, filename: cv.filename, size: 0 }));
+
+		setSelectedLibraryIds(nextIds);
+		setCandidates([...selectedCandidates, ...uploadedCandidates]);
+		setRankedResults([]);
+		setAnalysisError(null);
+		setIsProjectSaved(false);
+	};
+
+	const handleBatchToggle = (batch: CVBatch, selected: boolean) => {
+		let nextIds: string[];
+		if (selected) {
+			nextIds = Array.from(new Set([...selectedLibraryIds, ...batch.cvIds]));
+		} else {
+			nextIds = selectedLibraryIds.filter((id) => !batch.cvIds.includes(id));
+		}
 		const selectedCandidates: UploadedCandidate[] = libraryCVs
 			.filter((cv) => nextIds.includes(cv.id))
 			.map((cv) => ({ id: cv.id, filename: cv.filename, size: 0 }));
@@ -312,28 +347,65 @@ export default function HomePage() {
 
 			<section>
 				{activeJob && (
-					<div className="mb-4 rounded-xl border border-border bg-card p-6 shadow-xs">
+					<div className="mb-4 rounded-xl border border-border bg-card p-6 shadow-xs space-y-4">
 						<div className="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
 							<div>
-								<h3 className="text-base font-bold text-foreground">Choose From CV Library</h3>
-								<p className="text-xs text-muted-foreground">Reuse previously uploaded CVs for this evaluation.</p>
+								<h3 className="text-base font-bold text-foreground">Choose From CV Library &amp; Batches</h3>
+								<p className="text-xs text-muted-foreground">Select individual CVs or pick entire pre-saved CV Batches for this evaluation.</p>
 							</div>
-							<NavLink to="/cvs" className="text-xs font-semibold text-primary hover:underline">Open CV Library</NavLink>
+							<NavLink to="/cvs" className="text-xs font-semibold text-primary hover:underline">Manage Library &amp; Batches</NavLink>
 						</div>
+
+						{/* Saved CV Batches */}
+						{storedBatches.length > 0 && (
+							<div className="space-y-2">
+								<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Pre-saved CV Batches</span>
+								<div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+									{storedBatches.map((batch) => {
+										const allInBatchSelected = batch.cvIds.length > 0 && batch.cvIds.every((id) => selectedLibraryIds.includes(id));
+
+										return (
+											<label key={batch.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 hover:bg-primary/10 transition-colors">
+												<input
+													type="checkbox"
+													checked={allInBatchSelected}
+													onChange={(event) => handleBatchToggle(batch, event.target.checked)}
+													className="mt-0.5"
+												/>
+												<div className="min-w-0">
+													<div className="flex items-center gap-2">
+														<span className="text-xs font-bold text-foreground">{batch.name}</span>
+														<span className="rounded bg-primary/10 px-1.5 py-0.2 text-[10px] font-semibold text-primary">
+															{batch.cvIds.length} CVs
+														</span>
+													</div>
+													{batch.description && <p className="text-[11px] text-muted-foreground truncate mt-0.5">{batch.description}</p>}
+												</div>
+											</label>
+										);
+									})}
+								</div>
+							</div>
+						)}
+
+						{/* Individual Library CVs */}
 						{libraryCVs.length === 0 ? (
-							<p className="pt-4 text-xs text-muted-foreground">No stored CVs yet. Upload one below.</p>
+							<p className="pt-2 text-xs text-muted-foreground">No stored CVs yet. Upload one below.</p>
 						) : (
-							<div className="grid grid-cols-1 gap-2 pt-4 sm:grid-cols-2">
-								{libraryCVs.map((cv) => (
-									<label key={cv.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/80 p-3 hover:bg-muted/30">
-										<input
-											type="checkbox"
-											checked={selectedLibraryIds.includes(cv.id)}
-											onChange={(event) => handleLibrarySelection(cv.id, event.target.checked)}
-										/>
-										<span className="min-w-0 truncate text-xs font-medium text-foreground">{cv.filename}</span>
-									</label>
-								))}
+							<div className="space-y-2">
+								<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Individual CV Resumes</span>
+								<div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+									{libraryCVs.map((cv) => (
+										<label key={cv.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/80 p-3 hover:bg-muted/30">
+											<input
+												type="checkbox"
+												checked={selectedLibraryIds.includes(cv.id)}
+												onChange={(event) => handleLibrarySelection(cv.id, event.target.checked)}
+											/>
+											<span className="min-w-0 truncate text-xs font-medium text-foreground">{cv.filename}</span>
+										</label>
+									))}
+								</div>
 							</div>
 						)}
 					</div>

@@ -134,3 +134,45 @@ export function getStoredProjectById(projectId: string): EvaluationProject | nul
 	const projects = getStoredProjects();
 	return projects.find((p) => p.id === projectId) ?? null;
 }
+
+const BATCHES_STORAGE_KEY = "cv_rank_batches";
+
+export interface CVBatch {
+	id: string;
+	name: string;
+	description?: string;
+	cvIds: string[];
+	createdAt: string;
+}
+
+export function getStoredBatches(): CVBatch[] {
+	try {
+		const raw = localStorage.getItem(BATCHES_STORAGE_KEY);
+		if (!raw) return [];
+		const parsed = JSON.parse(raw);
+		return Array.isArray(parsed) ? parsed : [];
+	} catch {
+		return [];
+	}
+}
+
+export function saveStoredBatch(batch: CVBatch): CVBatch[] {
+	const current = getStoredBatches();
+	const existingIndex = current.findIndex((b) => b.id === batch.id);
+	let updated: CVBatch[];
+	if (existingIndex >= 0) {
+		updated = [...current];
+		updated[existingIndex] = batch;
+	} else {
+		updated = [batch, ...current];
+	}
+	localStorage.setItem(BATCHES_STORAGE_KEY, JSON.stringify(updated));
+	return updated;
+}
+
+export function deleteStoredBatch(batchId: string): CVBatch[] {
+	const current = getStoredBatches();
+	const filtered = current.filter((b) => b.id !== batchId);
+	localStorage.setItem(BATCHES_STORAGE_KEY, JSON.stringify(filtered));
+	return filtered;
+}
