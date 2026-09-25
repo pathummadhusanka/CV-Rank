@@ -1,13 +1,14 @@
 from pathlib import Path
 from uuid import uuid4
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.services.cv_parser import extract_text
 from app.db.database import get_session
-from app.db.models import CV
-from app.schemas import CVSummary, CVUploadResponse
+from app.db.models import CV, ExtractionTerm
+from app.schemas import CVDetailResponse, CVSummary, CVUploadResponse, UpdateCVTextRequest
 from app.services.cv_service import create_cv
 from app.services.candidate_parser import parse_candidate
 
@@ -86,7 +87,21 @@ async def upload_cv(
             detail="Could not extract text from the CV",
         )
     
-    candidate = parse_candidate(text)
+    terms = session.query(ExtractionTerm).filter(ExtractionTerm.enabled.is_(True)).all()
+    candidate = parse_candidate(text, terms)
+
+    existing_cv = (
+        session.query(CV)
+        .filter(CV.filename == (file.filename or "unknown.pdf"), CV.extracted_text == text)
+        .first()
+    )
+    if existing_cv:
+        file_path.unlink(missing_ok=True)
+        return {
+            "id": existing_cv.id,
+            "filename": existing_cv.filename,
+            "status": "already_processed",
+        }
 
     create_cv(
         session=session,
@@ -104,3 +119,109 @@ async def upload_cv(
         "filename": file.filename,
         "status": "processed",
     }
+
+
+@router.get("/{cv_id}")
+def get_cv_detail(
+    cv_id: str,
+    session: Session = Depends(get_session),
+) -> CVDetailResponse:
+    cv = session.get(CV, cv_id)
+    if not cv:
+        raise HTTPException(status_code=404, detail="CV not found")
+
+    return {
+        "id": cv.id,
+        "filename": cv.filename,
+        "extracted_text": cv.extracted_text,
+        "skills": cv.skills,
+        "experience_years": cv.experience_years,
+        "education": cv.education,
+        "status": cv.status,
+        "created_at": cv.created_at,
+    }
+
+
+@router.get("/{cv_id}/file")
+def get_cv_file(
+    cv_id: str,
+    session: Session = Depends(get_session),
+):
+    cv = session.get(CV, cv_id)
+    if not cv:
+        raise HTTPException(status_code=404, detail="CV not found")
+
+    candidate_paths = [
+        Path(cv.file_path),
+        Path("storage/cvs") / f"{cv.id}.pdf",
+        Path("storage/cvs") / cv.filename,
+        Path("tests/fixtures/cvs") / cv.filename,
+        Path("src/backend/tests/fixtures/cvs") / cv.filename,
+        Path("../tests/fixtures/cvs") / cv.filename,
+    ]
+
+    valid_file_path = None
+    for p in candidate_paths:
+        if p.exists() and p.is_file():
+            valid_file_path = p
+            break
+
+    if not valid_file_path:
+        raise HTTPException(status_code=404, detail="CV PDF file not found on disk")
+
+    return FileResponse(
+        valid_file_path,
+        media_type="application/pdf",
+        filename=cv.filename,
+    )
+
+
+@router.put("/{cv_id}/text")
+def update_cv_text(
+    cv_id: str,
+    payload: UpdateCVTextRequest,
+    session: Session = Depends(get_session),
+) -> CVDetailResponse:
+    cv = session.get(CV, cv_id)
+    if not cv:
+        raise HTTPException(status_code=404, detail="CV not found")
+
+    new_text = payload.extracted_text.strip()
+    if not new_text:
+        raise HTTPException(status_code=400, detail="Extracted text cannot be empty")
+
+    cv.extracted_text = new_text
+
+    # Re-parse skills and attributes from updated text
+    terms = session.query(ExtractionTerm).filter(ExtractionTerm.enabled.is_(True)).all()
+    candidate = parse_candidate(new_text, terms)
+    cv.skills = candidate["skills"]
+    cv.experience_years = candidate["experience_years"]
+    cv.education = candidate["education"]
+
+    session.commit()
+    session.refresh(cv)
+
+    return {
+        "id": cv.id,
+        "filename": cv.filename,
+        "extracted_text": cv.extracted_text,
+        "skills": cv.skills,
+        "experience_years": cv.experience_years,
+        "education": cv.education,
+        "status": cv.status,
+        "created_at": cv.created_at,
+    }
+
+
+@router.delete("/{cv_id}", status_code=204)
+def delete_cv(
+    cv_id: str,
+    session: Session = Depends(get_session),
+) -> None:
+    cv = session.get(CV, cv_id)
+    if not cv:
+        raise HTTPException(status_code=404, detail="CV not found")
+    Path(cv.file_path).unlink(missing_ok=True)
+    session.delete(cv)
+    session.commit()

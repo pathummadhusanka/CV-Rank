@@ -1,10 +1,10 @@
 from uuid import uuid4
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db.database import get_session
-from app.db.models import Job
+from app.db.models import ExtractionTerm, Job
 from app.schemas import JobCreateResponse, JobSummary
 from app.services.job_service import create_job
 from app.services.job_parser import parse_job_description
@@ -14,6 +14,11 @@ router = APIRouter(prefix="/jobs", tags=["Jobs"])
 
 
 class JobCreate(BaseModel):
+    title: str
+    description: str
+
+
+class JobUpdate(BaseModel):
     title: str
     description: str
 
@@ -45,7 +50,8 @@ def create_job_endpoint(
 ) -> JobCreateResponse:
     job_id = str(uuid4())
 
-    requirements = parse_job_description(data.description)
+    terms = session.query(ExtractionTerm).filter(ExtractionTerm.enabled.is_(True)).all()
+    requirements = parse_job_description(data.description, terms)
 
     job = create_job(
         session=session,
@@ -60,6 +66,49 @@ def create_job_endpoint(
     return {
         "id": job.id,
         "title": job.title,
+        "description": job.description,
         "status": "created",
         "requirements": requirements,
     }
+
+
+@router.put("/{job_id}")
+def update_job_endpoint(
+    job_id: str,
+    data: JobUpdate,
+    session: Session = Depends(get_session),
+) -> JobCreateResponse:
+    job = session.get(Job, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if not data.title.strip() or not data.description.strip():
+        raise HTTPException(status_code=400, detail="Title and description are required")
+
+    terms = session.query(ExtractionTerm).filter(ExtractionTerm.enabled.is_(True)).all()
+    requirements = parse_job_description(data.description, terms)
+    job.title = data.title.strip()
+    job.description = data.description.strip()
+    job.required_skills = ",".join(requirements["skills"])
+    job.experience_years = requirements["experience_years"]
+    job.education = requirements["education"]
+    session.commit()
+
+    return {
+        "id": job.id,
+        "title": job.title,
+        "description": job.description,
+        "status": "updated",
+        "requirements": requirements,
+    }
+
+
+@router.delete("/{job_id}", status_code=204)
+def delete_job(
+    job_id: str,
+    session: Session = Depends(get_session),
+) -> None:
+    job = session.get(Job, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    session.delete(job)
+    session.commit()

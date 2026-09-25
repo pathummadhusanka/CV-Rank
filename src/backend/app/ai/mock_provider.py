@@ -38,6 +38,7 @@ class MockAIProvider:
                     requirement=requirement.description,
                     classification=MatchClassification.no_evidence,
                     evidence=[],
+                    reasoning="No direct evidence found in candidate document.",
                 )
                 for requirement in requirements.requirements
             ]

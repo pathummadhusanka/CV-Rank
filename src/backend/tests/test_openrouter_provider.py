@@ -4,8 +4,8 @@ from types import SimpleNamespace
 import pytest
 from pydantic import SecretStr
 
-from app.ai.errors import AIConfigurationError, AIResponseError
-from app.ai.openrouter_provider import OpenRouterProvider
+from app.ai.errors import AIConfigurationError, AIProviderError, AIResponseError
+from app.ai.openrouter_provider import OpenRouterProvider, classify_openrouter_error
 from app.ai.schemas import AIJobAnalysis
 from app.ai.semantic import EmbeddingError, cosine_similarity
 from app.core.config import Settings
@@ -182,6 +182,26 @@ def test_openrouter_provider_requires_api_key_without_injected_client():
         OpenRouterProvider(Settings())
 
 
+def test_openrouter_provider_classifies_invalid_api_key():
+    error = type("FakeOpenRouterError", (Exception,), {"status_code": 401})()
+
+    classified = classify_openrouter_error(error)
+
+    assert isinstance(classified, AIProviderError)
+    assert classified.code == "invalid_api_key"
+    assert str(classified) == "The OpenRouter API key is invalid. Ask the administrator to replace it."
+
+
+def test_openrouter_provider_classifies_credits_exhausted():
+    error = type("FakeOpenRouterError", (Exception,), {"status_code": 402, "message": "User has insufficient credits"})()
+
+    classified = classify_openrouter_error(error)
+
+    assert isinstance(classified, AIProviderError)
+    assert classified.code == "credits_exhausted"
+    assert str(classified) == "OpenRouter credits or the configured key limit have been exhausted."
+
+
 def test_openrouter_provider_rejects_malformed_json():
     class MalformedClient(FakeClient):
         def create_chat(self, **kwargs):
@@ -201,3 +221,4 @@ def test_cosine_similarity_is_bounded_and_validates_dimensions():
 
     with pytest.raises(EmbeddingError):
         cosine_similarity([1.0], [1.0, 0.0])
+

@@ -12,6 +12,7 @@ class Requirements(BaseModel):
 class JobCreateResponse(BaseModel):
     id: str
     title: str
+    description: str
     status: str
     requirements: Requirements
 
@@ -24,6 +25,21 @@ class JobSummary(BaseModel):
     experience_years: int | None
     education: str | None
     created_at: datetime
+
+
+class ExtractionTermResponse(BaseModel):
+    id: int
+    term: str
+    aliases: str
+    category: str
+    enabled: bool
+
+
+class ExtractionTermRequest(BaseModel):
+    term: str
+    aliases: str = ""
+    category: str = "skill"
+    enabled: bool = True
 
 
 class CVUploadResponse(BaseModel):
@@ -40,6 +56,21 @@ class CVSummary(BaseModel):
     education: str | None
     status: str
     created_at: datetime
+
+
+class CVDetailResponse(BaseModel):
+    id: str
+    filename: str
+    extracted_text: str
+    skills: str
+    experience_years: int | None
+    education: str | None
+    status: str
+    created_at: datetime
+
+
+class UpdateCVTextRequest(BaseModel):
+    extracted_text: str
 
 
 class SkillMatch(BaseModel):

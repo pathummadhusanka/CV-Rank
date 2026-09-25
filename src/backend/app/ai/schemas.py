@@ -25,6 +25,7 @@ class RequirementAssessment(BaseModel):
     requirement: str = Field(min_length=1)
     classification: MatchClassification
     evidence: list[str] = Field(default_factory=list)
+    reasoning: str = ""
 
 
 class AICandidateAssessment(BaseModel):
@@ -35,6 +36,7 @@ class RequirementMatch(BaseModel):
     requirement: AIRequirement
     classification: MatchClassification
     evidence: list[str] = Field(default_factory=list)
+    reasoning: str = ""
     semantic_similarity: float = Field(ge=0, le=1)
     match_value: float = Field(ge=0, le=1)
 
@@ -46,12 +48,15 @@ class CandidateAnalysis(BaseModel):
     required_skill_score: float = Field(ge=0, le=100)
     preferred_skill_score: float = Field(ge=0, le=100)
     experience_score: float = Field(ge=0, le=100)
+    project_score: float = Field(ge=0, le=100, default=100.0)
     semantic_similarity_score: float = Field(ge=0, le=100)
     overall_score: float = Field(ge=0, le=100)
     matches: list[RequirementMatch]
     strengths: list[str]
     gaps: list[str]
     explanation: str = Field(min_length=1)
+    executive_summary: str = ""
+    interview_questions: list[str] = Field(default_factory=list)
 
 
 class AIAnalysisResult(BaseModel):

@@ -6,6 +6,7 @@ interface CandidateLeaderboardProps {
 	onSelectCandidate: (candidate: RankedCandidate) => void;
 	onRerun: () => void;
 	isAnalyzing?: boolean;
+	canRerun?: boolean;
 }
 
 export function CandidateLeaderboard({
@@ -13,6 +14,7 @@ export function CandidateLeaderboard({
 	onSelectCandidate,
 	onRerun,
 	isAnalyzing = false,
+	canRerun = true,
 }: CandidateLeaderboardProps) {
 	const exportToCSV = () => {
 		const headers = ["Rank", "Candidate", "Filename", "Fit Score (%)", "Strengths", "Gaps"];
@@ -75,14 +77,16 @@ export function CandidateLeaderboard({
 					>
 						Export CSV
 					</Button>
-					<Button
-						variant="default"
-						size="sm"
-						onClick={onRerun}
-						disabled={isAnalyzing}
-					>
-						{isAnalyzing ? "Recalculating..." : "Rerun Evaluation"}
-					</Button>
+					{canRerun && (
+						<Button
+							variant="default"
+							size="sm"
+							onClick={onRerun}
+							disabled={isAnalyzing}
+						>
+							{isAnalyzing ? "Recalculating..." : "Rerun Evaluation"}
+						</Button>
+					)}
 				</div>
 			</div>
 
