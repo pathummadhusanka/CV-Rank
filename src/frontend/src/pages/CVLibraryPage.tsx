@@ -78,7 +78,7 @@ function ChevronRightIcon({ className = "size-4" }: { className?: string }) {
 	);
 }
 
-type TabMode = "resumes" | "batches" | "all";
+type TabMode = "resumes" | "batches";
 type SortOption = "newest" | "oldest" | "name";
 
 export default function CVLibraryPage() {
@@ -170,11 +170,11 @@ export default function CVLibraryPage() {
 	};
 
 	const handleEvaluateCVs = (cvIds: string[]) => {
+		if (cvIds.length === 0) return;
 		if (cvIds.length === 1) {
 			navigate(`/evaluations?cvId=${cvIds[0]}`);
 		} else {
-			// Create a temporary batch or evaluate first
-			navigate(`/evaluations?cvId=${cvIds[0]}`);
+			navigate(`/evaluations?cvIds=${cvIds.join(",")}`);
 		}
 	};
 
@@ -311,24 +311,13 @@ export default function CVLibraryPage() {
 						<FolderIcon className="size-3.5" />
 						Saved Batches ({batches.length})
 					</button>
-					<button
-						type="button"
-						onClick={() => setActiveTab("all")}
-						className={`flex items-center gap-2 rounded-md px-3 py-1.5 font-medium transition-colors cursor-pointer ${
-							activeTab === "all"
-								? "bg-background text-foreground shadow-xs font-semibold"
-								: "text-muted-foreground hover:text-foreground"
-						}`}
-					>
-						All-in-One View
-					</button>
 				</div>
 			</div>
 
 			{/* ========================================================================= */}
 			{/* SECTION 1: SAVED CV BATCHES */}
 			{/* ========================================================================= */}
-			{(activeTab === "batches" || activeTab === "all") && (
+			{activeTab === "batches" && (
 				<section className="space-y-4">
 					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 shadow-xs">
 						<div className="flex items-center gap-3">
@@ -455,7 +444,7 @@ export default function CVLibraryPage() {
 			{/* ========================================================================= */}
 			{/* SECTION 2: INDIVIDUAL RESUMES (WITH PAGINATION) */}
 			{/* ========================================================================= */}
-			{(activeTab === "resumes" || activeTab === "all") && (
+			{activeTab === "resumes" && (
 				<section className="space-y-4">
 					<div className="rounded-xl border border-border bg-card p-4 shadow-xs space-y-3">
 						<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-3">

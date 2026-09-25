@@ -115,6 +115,25 @@ export default function HomePage() {
 	}, [activeJob?.id]);
 
 	useEffect(() => {
+		const cvId = searchParams.get("cvId");
+		const cvIdsParam = searchParams.get("cvIds");
+		const targetCVIds = cvIdsParam
+			? cvIdsParam.split(",").map((s) => s.trim()).filter(Boolean)
+			: cvId
+			? [cvId]
+			: [];
+
+		if (targetCVIds.length > 0 && libraryCVs.length > 0) {
+			const validCVIds = targetCVIds.filter((id) => libraryCVs.some((cv) => cv.id === id));
+			if (validCVIds.length > 0) {
+				setSelectedLibraryIds(validCVIds);
+				const selectedCandidates: UploadedCandidate[] = libraryCVs
+					.filter((cv) => validCVIds.includes(cv.id))
+					.map((cv) => ({ id: cv.id, filename: cv.filename, size: 0 }));
+				setCandidates(selectedCandidates);
+			}
+		}
+
 		const batchId = searchParams.get("batchId");
 		if (batchId && libraryCVs.length > 0) {
 			const foundBatch = storedBatches.find((b) => b.id === batchId);
