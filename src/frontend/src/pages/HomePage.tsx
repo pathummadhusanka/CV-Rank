@@ -19,6 +19,14 @@ import { useSystemStatus } from "@/components/SystemStatusContext";
 import { ApiError, getAIRequirements, getCVs, getJobs, type AIHealthStatus, type AIRequirement, type CreateJobResponse, type CVSummary } from "@/lib/api";
 import type { RankedCandidate } from "@/types/ranking";
 
+function SearchIcon({ className = "size-3.5" }: { className?: string }) {
+	return (
+		<svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" aria-hidden="true">
+			<path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z" />
+		</svg>
+	);
+}
+
 export default function HomePage() {
 	const { checkHealth, reportAIError } = useSystemStatus();
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -329,7 +337,10 @@ export default function HomePage() {
 											onClick={() => setSearchModalMode("jobs")}
 											className="cursor-pointer space-y-1 rounded-lg border border-dashed border-primary/40 bg-primary/5 p-4 text-center transition-all hover:border-primary hover:bg-primary/10 flex flex-col items-center justify-center min-h-[76px]"
 										>
-											<span className="text-xs font-bold text-primary">🔍 Search and add from library</span>
+											<span className="text-xs font-bold text-primary inline-flex items-center gap-1.5">
+												<SearchIcon className="size-3.5" />
+												Search and add from library
+											</span>
 											<span className="text-[11px] text-muted-foreground">Pick from all {storedJobs.length} job roles</span>
 										</button>
 									</div>
@@ -390,9 +401,10 @@ export default function HomePage() {
 								<button
 									type="button"
 									onClick={() => setSearchModalMode("batches")}
-									className="cursor-pointer rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3 text-center transition-all hover:border-primary hover:bg-primary/10 flex items-center justify-center gap-2 min-h-[48px]"
+									className="cursor-pointer rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3 text-center transition-all hover:border-primary hover:bg-primary/10 flex items-center justify-center gap-1.5 min-h-[48px]"
 								>
-									<span className="text-xs font-bold text-primary">🔍 Search and add from library</span>
+									<SearchIcon className="size-3.5 text-primary" />
+									<span className="text-xs font-bold text-primary">Search and add from library</span>
 								</button>
 							</div>
 						</div>
@@ -418,9 +430,10 @@ export default function HomePage() {
 								<button
 									type="button"
 									onClick={() => setSearchModalMode("cvs")}
-									className="cursor-pointer rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3 text-center transition-all hover:border-primary hover:bg-primary/10 flex items-center justify-center gap-2 min-h-[44px]"
+									className="cursor-pointer rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3 text-center transition-all hover:border-primary hover:bg-primary/10 flex items-center justify-center gap-1.5 min-h-[44px]"
 								>
-									<span className="text-xs font-bold text-primary">🔍 Search and add from library</span>
+									<SearchIcon className="size-3.5 text-primary" />
+									<span className="text-xs font-bold text-primary">Search and add from library</span>
 								</button>
 							</div>
 						</div>

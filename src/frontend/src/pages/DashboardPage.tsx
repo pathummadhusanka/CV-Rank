@@ -155,8 +155,10 @@ export default function DashboardPage() {
 
 				{projects.length === 0 ? (
 					<div className="py-12 text-center space-y-3">
-						<div className="size-12 rounded-full bg-muted flex items-center justify-center mx-auto text-muted-foreground font-bold">
-							📂
+						<div className="size-12 rounded-full bg-muted flex items-center justify-center mx-auto text-muted-foreground">
+							<svg className="size-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.75" stroke="currentColor" aria-hidden="true">
+								<path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-19.5 0A2.25 2.25 0 0 0 4.5 15h15a2.25 2.25 0 0 0 2.25-2.25m-19.5 0v.243a2.25 2.25 0 0 0 1.07 1.916l7.5 4.615a2.25 2.25 0 0 0 2.36 0l7.5-4.615a2.25 2.25 0 0 0 1.07-1.916V12.75" />
+							</svg>
 						</div>
 						<div className="space-y-1">
 							<h4 className="text-sm font-semibold text-foreground">
