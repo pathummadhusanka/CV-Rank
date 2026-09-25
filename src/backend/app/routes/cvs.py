@@ -150,11 +150,27 @@ def get_cv_file(
     cv = session.get(CV, cv_id)
     if not cv:
         raise HTTPException(status_code=404, detail="CV not found")
-    file_path = Path(cv.file_path)
-    if not file_path.exists():
+
+    candidate_paths = [
+        Path(cv.file_path),
+        Path("storage/cvs") / f"{cv.id}.pdf",
+        Path("storage/cvs") / cv.filename,
+        Path("tests/fixtures/cvs") / cv.filename,
+        Path("src/backend/tests/fixtures/cvs") / cv.filename,
+        Path("../tests/fixtures/cvs") / cv.filename,
+    ]
+
+    valid_file_path = None
+    for p in candidate_paths:
+        if p.exists() and p.is_file():
+            valid_file_path = p
+            break
+
+    if not valid_file_path:
         raise HTTPException(status_code=404, detail="CV PDF file not found on disk")
+
     return FileResponse(
-        file_path,
+        valid_file_path,
         media_type="application/pdf",
         filename=cv.filename,
     )

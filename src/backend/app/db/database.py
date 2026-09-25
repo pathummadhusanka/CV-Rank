@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 import uuid
 from sqlalchemy import create_engine
@@ -9,6 +10,22 @@ from app.core.config import settings
 
 DATABASE_DIR = Path("storage")
 DATABASE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _copy_seed_fixture(src_filename: str, dst_path_str: str):
+    dst = Path(dst_path_str)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if dst.exists():
+        return
+    candidate_sources = [
+        Path("tests/fixtures/cvs") / src_filename,
+        Path("src/backend/tests/fixtures/cvs") / src_filename,
+        Path("../tests/fixtures/cvs") / src_filename,
+    ]
+    for src in candidate_sources:
+        if src.exists():
+            shutil.copy(src, dst)
+            break
 
 
 connect_args = (
@@ -80,6 +97,8 @@ def create_tables():
             )
 
         if not session.query(CV).first():
+            _copy_seed_fixture("candidate_001_alex_perera.pdf", "storage/cvs/seed-cv-alex.pdf")
+            _copy_seed_fixture("candidate_002_jamie_silva.pdf", "storage/cvs/seed-cv-jamie.pdf")
             session.add_all(
                 [
                     CV(
