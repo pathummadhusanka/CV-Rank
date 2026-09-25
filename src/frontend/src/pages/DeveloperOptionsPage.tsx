@@ -36,28 +36,23 @@ export default function DeveloperOptionsPage() {
 					<p className="text-sm text-muted-foreground">Review the server-side OpenRouter API key and account allowance.</p>
 				</div>
 				<Button variant="outline" size="sm" onClick={checkHealth} disabled={isChecking}>
-					{isChecking ? "Checking status..." : "Check API key status"}
+					{isChecking ? "Checking..." : "Refresh status"}
 				</Button>
 			</div>
 
 			<section className="space-y-5 rounded-xl border border-border bg-card p-5 shadow-xs">
 				<div className={`rounded-lg border p-4 ${statusTone}`}>
-					<div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-						<div>
-							<p className="text-xs font-semibold uppercase tracking-wider">OpenRouter API Key</p>
-							<h2 className="mt-1 text-lg font-bold">{statusLabels[status]}</h2>
-							<p className="mt-1 text-sm">{aiHealth?.message ?? "Unable to check OpenRouter configuration."}</p>
-						</div>
-						<div className="flex flex-wrap items-center gap-2.5">
-							<Button variant="outline" size="sm" className="bg-background/80 text-xs shadow-xs" onClick={checkHealth} disabled={isChecking}>
-								{isChecking ? "Checking status..." : "Check API key status"}
-							</Button>
-							<span className="inline-flex w-fit items-center gap-2 rounded-full border border-current/20 px-2.5 py-1 text-xs font-semibold">
-								<span className={`size-2 rounded-full ${isReady ? "bg-emerald-500" : ["rate_limited", "provider_unavailable"].includes(status) ? "bg-amber-500" : "bg-rose-500"}`} />
-								{isReady ? "Working" : "Needs attention"}
-							</span>
-						</div>
+				<div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+					<div>
+						<p className="text-xs font-semibold uppercase tracking-wider">OpenRouter API Key</p>
+						<h2 className="mt-1 text-lg font-bold">{statusLabels[status]}</h2>
+						<p className="mt-1 text-sm">{aiHealth?.message ?? "Unable to check OpenRouter configuration."}</p>
 					</div>
+					<span className="inline-flex w-fit items-center gap-2 rounded-full border border-current/20 px-2.5 py-1 text-xs font-semibold">
+						<span className={`size-2 rounded-full ${isReady ? "bg-emerald-500" : ["rate_limited", "provider_unavailable"].includes(status) ? "bg-amber-500" : "bg-rose-500"}`} />
+						{isReady ? "Working" : "Needs attention"}
+					</span>
+				</div>
 				</div>
 				<div className="border-b border-border/60 pb-3">
 					<h2 className="text-base font-bold text-foreground">Key and usage details</h2>
