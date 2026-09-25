@@ -265,9 +265,6 @@ export default function HomePage() {
 		setIsChoosingJob(true);
 		setProjectJobAvailable(true);
 		setSearchParams({});
-		setCandidates([]);
-		setUploadedCandidates([]);
-		setSelectedLibraryIds([]);
 		setRankedResults([]);
 		setSelectedCandidate(null);
 		setAnalysisError(null);
