@@ -1,74 +1,116 @@
-# CV-Rank MVP
-<img width="1920" height="1020" alt="image" src="https://github.com/user-attachments/assets/3e01d81b-2539-480d-b2de-5ca73dd04999" />
+# CV-Rank — AI Candidate Evaluation & Ranking System
 
-CV-Rank compares multiple candidate PDF CVs against one job description using a hybrid AI pipeline:
+<img width="1920" height="1020" alt="CV-Rank Application Preview" src="https://github.com/user-attachments/assets/3e01d81b-2539-480d-b2de-5ca73dd04999" />
 
-- OpenRouter LLM for requirement extraction, CV understanding, ambiguous matching, and evidence.
-- Local Hugging Face Sentence Transformers embeddings for semantic similarity between job requirements and CV sections.
-- Python for deterministic weighted scoring and ranking.
+**CV-Rank** is an intelligent candidate screening application designed for hiring managers and recruiters. It analyzes candidate PDF resumes against job descriptions using a modern hybrid AI pipeline:
 
-The system supports human review and does not make autonomous hiring decisions.
+- **OpenRouter AI (GPT-4o-mini)**: Extracts job requirements, analyzes candidate qualifications, identifies missing skills, and pulls direct evidence from resumes.
+- **Local Hugging Face Embeddings**: Computes semantic similarity between job requirements and candidate resume sections locally.
+- **Deterministic Python Engine**: Calculates objective, transparent weighted scores and candidate rankings.
 
-## Run The Application
+> **Note for Hiring Managers**: CV-Rank is an advisory decision-support tool. It presents clear evidence and reasoning for human review and does not make autonomous hiring decisions.
 
-Requirements:
+---
 
-- Docker Desktop with the Linux engine running.
-- An OpenRouter API key for real AI analysis.
+## 🚀 Quick Start Guide (For Non-Technical Users)
 
-From the repository root:
+Follow these simple steps to set up and run CV-Rank on your computer.
 
-```bash
-copy .env.example .env
-type .env
-```
+### 📋 Prerequisites
 
-Put your OpenRouter key in `.env` as `AI_API_KEY`. The embedding model runs locally in the backend container. Do not commit `.env`.
+Before starting, ensure you have:
+1. **Docker Desktop** installed and running on your computer. ([Download Docker Desktop](https://www.docker.com/products/docker-desktop/))
+2. **An OpenRouter API Key** (Instructions below).
 
-Start the application:
+---
 
-```bash
-docker compose up --build
-```
+### Step 1: Get an OpenRouter API Key
 
-Open the browser at <http://localhost:3000>.
+OpenRouter provides access to AI models for resume analysis.
 
-The same full-stack application can be run as one Docker container:
+1. Go to **[OpenRouter.ai](https://openrouter.ai/)** and sign up for a free account (or log in).
+2. Click on your profile or visit **[openrouter.ai/keys](https://openrouter.ai/keys)**.
+3. Click **"Create Key"**, give it a name (e.g., `CV-Rank`), and copy the generated key.
+   * *Your key will look like: `sk-or-v1-abcdef123456789...`*
 
-```bash
-docker build -t cv-rank .
-docker run --rm \
-	--name cv-rank \
-	--env-file .env \
-	-p 3000:80 \
-	cv-rank
-```
+---
 
-The container serves the browser application and backend API together. The first startup may download the local embedding model.
+### Step 2: Configure Your Environment File (`.env`)
 
-Stop the application:
+1. Open a terminal or Command Prompt in the `CV-Rank` project folder:
+   - **Windows (Command Prompt / PowerShell)**:
+     ```cmd
+     copy .env.example .env
+     ```
+   - **Mac / Linux**:
+     ```bash
+     cp .env.example .env
+     ```
+2. Open the newly created `.env` file in Notepad, VS Code, or any text editor.
+3. Find the line `AI_API_KEY=` and paste your OpenRouter key after the equals sign:
+   ```env
+   AI_API_KEY=sk-or-v1-your-actual-openrouter-key-here
+   ```
+4. Save and close the `.env` file.
 
-```bash
-docker compose down
-```
+---
 
-The SQLite database and uploaded CV files are container-local. Removing the container with `docker compose down` resets the application data; the next `docker compose up` starts with the initial seed records.
+### Step 3: Start the Application (`docker compose up`)
 
-## User Manual
+1. Make sure **Docker Desktop** is open and running on your computer.
+2. In your terminal, run the following command to start CV-Rank:
 
-See the complete [User Manual](docs/USER_MANUAL.md) for the hiring-manager workflow. In short: select a job, upload PDF CVs, run AI analysis, review the ranked evidence, and save the evaluation project.
+   ```bash
+   docker compose up --build
+   ```
 
-The application shows an error when the AI provider is unavailable. It does not replace failed AI results with keyword-only rankings.
+3. Wait a few moments while Docker builds and starts the application.
+4. Once ready, open your web browser (Chrome, Edge, Safari, or Firefox) and visit:
 
-## Project Documents
+   👉 **[http://localhost:3000](http://localhost:3000)**
 
-- [SPEC.md](SPEC.md) - product specification and scoring methodology.
-- [MVP_PLAN.md](MVP_PLAN.md) - implementation milestones and definition of done.
-- [User Manual](docs/USER_MANUAL.md) - non-technical hiring-manager instructions.
-- [Available Features](docs/FEATURES.md) - implemented features and explicit exclusions.
-- [Architecture](docs/ARCHITECTURE.md) - system flow, AI boundaries, and code areas.
-- [Developer Guide](docs/DEVELOPER_GUIDE.md) - local development, Docker, testing, and contribution workflow.
-- [Environment Configuration](docs/ENVIRONMENT.md) - every `.env` variable and its purpose.
-- [Backend worklog](src/backend/docs/WORKLOG.md) - milestone history.
-- [Backend decisions](src/backend/docs/DECISIONS.md) - major architectural decisions.
-- [Prompt record](src/backend/docs/PROMPTS.md) - AI prompt contracts.
+---
+
+### Step 4: Stop the Application (`docker compose down`)
+
+When you are done using CV-Rank:
+
+1. In your terminal window where Docker is running, press **`Ctrl + C`** to stop the process.
+2. To shut down the containers completely and prepare for a clean session next time, run:
+
+   ```bash
+   docker compose down
+   ```
+
+> **💡 What does `docker compose down` do?**  
+> Running `docker compose down` removes temporary application containers. On your next `docker compose up`, CV-Rank will start fresh with default seed data, clearing temporary candidate files from previous testing sessions.
+
+---
+
+## 🛠️ Common Troubleshooting
+
+- **"Docker is not running or command not found"**:  
+  Make sure Docker Desktop is launched and the whale icon is visible in your system tray or taskbar.
+- **"AI Key or Service Unavailable Error"**:  
+  Check your `.env` file to confirm `AI_API_KEY` is pasted correctly without extra spaces or quotes. You can verify key status anytime on the **Developer Options** page in the application.
+- **"Port 3000 is already in use"**:  
+  Close any other applications running on port 3000 or restart Docker Desktop.
+
+---
+
+## 📚 Documentation & Technical References
+
+For developers and detailed specifications:
+
+- 📖 **[User Manual](docs/USER_MANUAL.md)** — Comprehensive step-by-step user guide for hiring managers.
+- 📐 **[Product Specification (SPEC.md)](SPEC.md)** — Architectural design and detailed scoring algorithm formula.
+- 🏗️ **[System Architecture](docs/ARCHITECTURE.md)** — Component breakdown, hybrid AI boundaries, and data flow.
+- 💻 **[Developer Guide](docs/DEVELOPER_GUIDE.md)** — Local setup, testing, and backend development instructions.
+- ⚙️ **[Environment Variables](docs/ENVIRONMENT.md)** — Complete reference for all `.env` options.
+- 📋 **[Implemented Features](docs/FEATURES.md)** — List of supported capabilities and exclusions.
+
+---
+
+## 📄 License
+
+CV-Rank is provided as open source software under the standard project license.
