@@ -72,6 +72,10 @@ export interface CVSummary {
 	created_at: string;
 }
 
+export interface CVDetail extends CVSummary {
+	extracted_text: string;
+}
+
 export interface ExtractionTerm {
 	id: number;
 	term: string;
@@ -294,6 +298,20 @@ export async function uploadCV(file: File): Promise<UploadCVResponse> {
 export async function getCVs(): Promise<CVSummary[]> {
 	const res = await fetch("/api/cvs");
 	return handleResponse<CVSummary[]>(res);
+}
+
+export async function getCVDetail(cvId: string): Promise<CVDetail> {
+	const res = await fetch(`/api/cvs/${cvId}`);
+	return handleResponse<CVDetail>(res);
+}
+
+export async function updateCVText(cvId: string, extractedText: string): Promise<CVDetail> {
+	const res = await fetch(`/api/cvs/${cvId}/text`, {
+		method: "PUT",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ extracted_text: extractedText }),
+	});
+	return handleResponse<CVDetail>(res);
 }
 
 export async function deleteCV(cvId: string): Promise<void> {

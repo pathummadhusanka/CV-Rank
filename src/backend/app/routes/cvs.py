@@ -1,13 +1,14 @@
 from pathlib import Path
 from uuid import uuid4
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.services.cv_parser import extract_text
 from app.db.database import get_session
 from app.db.models import CV, ExtractionTerm
-from app.schemas import CVSummary, CVUploadResponse
+from app.schemas import CVDetailResponse, CVSummary, CVUploadResponse, UpdateCVTextRequest
 from app.services.cv_service import create_cv
 from app.services.candidate_parser import parse_candidate
 
@@ -117,6 +118,83 @@ async def upload_cv(
         "id": cv_id,
         "filename": file.filename,
         "status": "processed",
+    }
+
+
+@router.get("/{cv_id}")
+def get_cv_detail(
+    cv_id: str,
+    session: Session = Depends(get_session),
+) -> CVDetailResponse:
+    cv = session.get(CV, cv_id)
+    if not cv:
+        raise HTTPException(status_code=404, detail="CV not found")
+
+    return {
+        "id": cv.id,
+        "filename": cv.filename,
+        "extracted_text": cv.extracted_text,
+        "skills": cv.skills,
+        "experience_years": cv.experience_years,
+        "education": cv.education,
+        "status": cv.status,
+        "created_at": cv.created_at,
+    }
+
+
+@router.get("/{cv_id}/file")
+def get_cv_file(
+    cv_id: str,
+    session: Session = Depends(get_session),
+):
+    cv = session.get(CV, cv_id)
+    if not cv:
+        raise HTTPException(status_code=404, detail="CV not found")
+    file_path = Path(cv.file_path)
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="CV PDF file not found on disk")
+    return FileResponse(
+        file_path,
+        media_type="application/pdf",
+        filename=cv.filename,
+    )
+
+
+@router.put("/{cv_id}/text")
+def update_cv_text(
+    cv_id: str,
+    payload: UpdateCVTextRequest,
+    session: Session = Depends(get_session),
+) -> CVDetailResponse:
+    cv = session.get(CV, cv_id)
+    if not cv:
+        raise HTTPException(status_code=404, detail="CV not found")
+
+    new_text = payload.extracted_text.strip()
+    if not new_text:
+        raise HTTPException(status_code=400, detail="Extracted text cannot be empty")
+
+    cv.extracted_text = new_text
+
+    # Re-parse skills and attributes from updated text
+    terms = session.query(ExtractionTerm).filter(ExtractionTerm.enabled.is_(True)).all()
+    candidate = parse_candidate(new_text, terms)
+    cv.skills = candidate["skills"]
+    cv.experience_years = candidate["experience_years"]
+    cv.education = candidate["education"]
+
+    session.commit()
+    session.refresh(cv)
+
+    return {
+        "id": cv.id,
+        "filename": cv.filename,
+        "extracted_text": cv.extracted_text,
+        "skills": cv.skills,
+        "experience_years": cv.experience_years,
+        "education": cv.education,
+        "status": cv.status,
+        "created_at": cv.created_at,
     }
 
 

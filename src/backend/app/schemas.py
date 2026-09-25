@@ -58,6 +58,21 @@ class CVSummary(BaseModel):
     created_at: datetime
 
 
+class CVDetailResponse(BaseModel):
+    id: str
+    filename: str
+    extracted_text: str
+    skills: str
+    experience_years: int | None
+    education: str | None
+    status: str
+    created_at: datetime
+
+
+class UpdateCVTextRequest(BaseModel):
+    extracted_text: str
+
+
 class SkillMatch(BaseModel):
     matched: list[str]
     missing: list[str]

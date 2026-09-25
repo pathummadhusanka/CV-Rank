@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 import { CreateBatchModal } from "@/components/CreateBatchModal";
+import { CVDetailModal } from "@/components/CVDetailModal";
 import { CVUploader } from "@/components/CVUploader";
 import { deleteCV, getCVs, type CVSummary } from "@/lib/api";
 import {
@@ -98,6 +99,7 @@ export default function CVLibraryPage() {
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageSize, setPageSize] = useState(6);
 	const [activeMenuCVId, setActiveMenuCVId] = useState<string | null>(null);
+	const [viewingCVId, setViewingCVId] = useState<string | null>(null);
 	const [expandedBatchIds, setExpandedBatchIds] = useState<Record<string, boolean>>({});
 
 	const menuRef = useRef<HTMLDivElement | null>(null);
@@ -609,7 +611,17 @@ export default function CVLibraryPage() {
 
 													{/* Action Dropdown Menu */}
 													{isMenuOpen && (
-														<div className="absolute right-0 top-full mt-1 z-30 w-44 rounded-lg border border-border bg-popover p-1 shadow-md text-xs space-y-0.5">
+														<div className="absolute right-0 top-full mt-1 z-30 w-48 rounded-lg border border-border bg-popover p-1 shadow-md text-xs space-y-0.5">
+															<button
+																type="button"
+																onClick={() => {
+																	setActiveMenuCVId(null);
+																	setViewingCVId(cv.id);
+																}}
+																className="w-full text-left px-2.5 py-1.5 rounded-md hover:bg-accent text-popover-foreground transition-colors font-medium cursor-pointer"
+															>
+																View PDF &amp; Extracted Text
+															</button>
 															<button
 																type="button"
 																onClick={() => {
@@ -673,9 +685,13 @@ export default function CVLibraryPage() {
 										</div>
 
 										<div className="flex items-center justify-between border-t border-border/60 pt-2.5 text-xs text-muted-foreground">
-											<span className="text-[10px]">
-												{cv.experience_years !== null ? `${cv.experience_years} yrs exp` : "No exp specified"}
-											</span>
+											<button
+												type="button"
+												onClick={() => setViewingCVId(cv.id)}
+												className="text-xs font-medium text-foreground/80 hover:text-primary hover:underline cursor-pointer"
+											>
+												View / Edit Text
+											</button>
 											<button
 												type="button"
 												onClick={() => handleEvaluateCVs([cv.id])}
@@ -762,6 +778,12 @@ export default function CVLibraryPage() {
 					onConfirm={handleConfirmDelete}
 				/>
 			)}
+
+			<CVDetailModal
+				cvId={viewingCVId}
+				onClose={() => setViewingCVId(null)}
+				onSaveSuccess={() => void refreshCVs()}
+			/>
 
 			<section className="pt-2">
 				<CVUploader onCandidatesChange={() => { void refreshCVs(); }} />
