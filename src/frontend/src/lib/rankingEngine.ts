@@ -30,6 +30,7 @@ function mapCandidate(candidate: AIAnalysisCandidate): RankedCandidate {
 		weight: item.requirement.weight,
 		status: mapClassification(item.classification),
 		evidence: item.evidence.join(" ") || "No evidence provided.",
+		reasoning: item.reasoning,
 	}));
 
 	return {
@@ -48,6 +49,8 @@ function mapCandidate(candidate: AIAnalysisCandidate): RankedCandidate {
 		strengths: candidate.strengths,
 		gaps: candidate.gaps,
 		explanation: candidate.explanation,
+		executiveSummary: candidate.executive_summary,
+		interviewQuestions: candidate.interview_questions,
 	};
 }
 

@@ -13,11 +13,11 @@ def test_health_check(client):
     response = client.get("/health")
 
     assert response.status_code == 200
-    assert response.json() == {
-        "service": "cv-rank",
-        "version": "0.1.0",
-        "status": "ok",
-    }
+    data = response.json()
+    assert data["service"] == "cv-rank"
+    assert data["version"] == "0.1.0"
+    assert data["status"] == "ok"
+    assert "db_instance_id" in data
 
 
 def test_ai_health_check_reports_missing_key(client, monkeypatch):

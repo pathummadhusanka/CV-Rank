@@ -183,15 +183,32 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 						</div>
 					)}
 
-					{/* Explanation */}
-					<div className="rounded-lg border border-border bg-muted/20 p-3.5 space-y-1">
-						<div className="text-xs font-semibold text-foreground uppercase tracking-wider">
-							Evaluation Summary
+					{/* Executive Summary / Explanation */}
+					<div className="rounded-lg border border-primary/20 bg-primary/5 p-3.5 space-y-1">
+						<div className="text-xs font-bold text-primary uppercase tracking-wider">
+							Executive Candidate Fit Summary
 						</div>
-						<p className="text-xs text-foreground/90 leading-relaxed">
-							{candidate.explanation}
+						<p className="text-xs text-foreground/90 leading-relaxed font-medium">
+							{candidate.executiveSummary || candidate.explanation}
 						</p>
 					</div>
+
+					{/* Suggested Interview Probing Questions */}
+					{candidate.interviewQuestions && candidate.interviewQuestions.length > 0 && (
+						<div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3.5 space-y-2">
+							<div className="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+								<span>💡</span>
+								<span>Suggested Interview Probing Questions</span>
+							</div>
+							<ul className="text-xs space-y-1.5 text-foreground/90 list-disc list-inside">
+								{candidate.interviewQuestions.map((q, idx) => (
+									<li key={idx} className="leading-snug">
+										<span className="font-semibold text-foreground">{q}</span>
+									</li>
+								))}
+							</ul>
+						</div>
+					)}
 
 					{/* Strengths & Gaps Grid */}
 					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -225,12 +242,12 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 					{/* Requirement Breakdown */}
 					<div className="space-y-2">
 						<div className="text-xs font-bold text-foreground uppercase tracking-wider">
-							Detailed Evidence Breakdown
+							Detailed Evidence Breakdown &amp; Reasoning
 						</div>
 
 						<div className="divide-y divide-border/60 rounded-lg border border-border overflow-hidden">
 							{candidate.matches.map((item, idx) => (
-								<div key={idx} className="p-3 space-y-1 bg-card">
+								<div key={idx} className="p-3.5 space-y-2 bg-card">
 									<div className="flex items-center justify-between gap-2">
 										<div className="flex items-center gap-2">
 											<span className="text-xs font-semibold text-foreground capitalize">
@@ -243,9 +260,15 @@ export function CandidateEvidenceModal({ candidate, onClose }: CandidateEvidence
 										{getBadgeForStatus(item.status)}
 									</div>
 
-									<p className="text-xs text-muted-foreground italic pl-2 border-l-2 border-primary/30">
+									<p className="text-xs text-foreground/90 italic pl-2.5 border-l-2 border-primary/40 bg-muted/20 py-1 pr-2 rounded-r-md">
 										&ldquo;{item.evidence}&rdquo;
 									</p>
+
+									{item.reasoning && (
+										<p className="text-[11px] text-muted-foreground bg-background p-2 rounded-md border border-border/60">
+											<strong className="text-foreground/80">AI Assessment Reasoning:</strong> {item.reasoning}
+										</p>
+									)}
 								</div>
 							))}
 						</div>

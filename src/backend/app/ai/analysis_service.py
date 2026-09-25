@@ -145,6 +145,7 @@ class AIAnalysisService:
                     requirement=requirement,
                     classification=item.classification,
                     evidence=item.evidence,
+                    reasoning=getattr(item, "reasoning", "") or "",
                     semantic_similarity=similarity,
                     match_value=CLASSIFICATION_VALUES[item.classification],
                 )
@@ -152,12 +153,12 @@ class AIAnalysisService:
 
         required_score = self._component_score(
             matches,
-            lambda match: match.requirement.category.lower() == "skill"
+            lambda match: match.requirement.category.lower() in {"skill", "hard_skill"}
             and match.requirement.required,
         )
         preferred_score = self._component_score(
             matches,
-            lambda match: match.requirement.category.lower() == "skill"
+            lambda match: match.requirement.category.lower() in {"skill", "hard_skill"}
             and not match.requirement.required,
         )
         experience_score = self._component_score(
@@ -190,6 +191,9 @@ class AIAnalysisService:
             }
         ]
 
+        executive_summary = self._build_executive_summary(overall_score, strengths, gaps)
+        interview_questions = self._build_interview_questions(matches)
+
         return CandidateAnalysis(
             rank=1,
             cv_id=candidate.cv_id,
@@ -203,6 +207,8 @@ class AIAnalysisService:
             strengths=strengths,
             gaps=gaps,
             explanation=self._build_explanation(overall_score, strengths, gaps),
+            executive_summary=executive_summary,
+            interview_questions=interview_questions,
         )
 
     @staticmethod
@@ -242,3 +248,36 @@ class AIAnalysisService:
         strength_text = ", ".join(strengths) or "no confirmed strengths"
         gap_text = ", ".join(gaps) or "no identified gaps"
         return f"Overall fit: {score}/100. Strengths: {strength_text}. Gaps: {gap_text}."
+
+    @staticmethod
+    def _build_executive_summary(score: float, strengths: list[str], gaps: list[str]) -> str:
+        if score >= 80:
+            fit_label = "Strong"
+        elif score >= 60:
+            fit_label = "Moderate"
+        else:
+            fit_label = "Low"
+
+        strength_part = f"Demonstrates solid alignment in {', '.join(strengths[:3])}." if strengths else "Lacks direct matches in core required areas."
+        gap_part = f" Key areas to probe include {', '.join(gaps[:2])}." if gaps else " Meets or exceeds all evaluated criteria."
+        return f"Candidate presents a {fit_label} alignment ({score}/100). {strength_part}{gap_part}"
+
+    @staticmethod
+    def _build_interview_questions(matches: list[RequirementMatch]) -> list[str]:
+        questions = []
+        for match in matches:
+            req_desc = match.requirement.description
+            if match.classification == MatchClassification.partial_match:
+                questions.append(
+                    f"Can you detail your hands-on experience with {req_desc} and describe a production project where you applied it?"
+                )
+            elif match.classification in {MatchClassification.no_evidence, MatchClassification.contradictory_evidence} and match.requirement.required:
+                questions.append(
+                    f"The resume does not explicitly document experience in {req_desc}. Have you worked with this skill or technology in past roles?"
+                )
+
+        if not questions:
+            questions.append("Can you describe the most complex technical project you led and your specific contributions?")
+            questions.append("How do you approach learning new technologies and tools required for a new project?")
+
+        return questions[:4]

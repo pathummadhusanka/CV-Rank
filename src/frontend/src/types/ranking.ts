@@ -8,6 +8,7 @@ export interface RequirementMatch {
 	weight: number;
 	status: MatchClassification;
 	evidence: string;
+	reasoning?: string;
 }
 
 export interface RankedCandidate {
@@ -28,4 +29,6 @@ export interface RankedCandidate {
 	strengths: string[];
 	gaps: string[];
 	explanation: string;
+	executiveSummary?: string;
+	interviewQuestions?: string[];
 }

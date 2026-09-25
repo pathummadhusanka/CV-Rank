@@ -97,6 +97,7 @@ export interface AIRequirementMatch {
 	requirement: AIRequirement;
 	classification: AIAssessmentClassification;
 	evidence: string[];
+	reasoning?: string;
 	semantic_similarity: number;
 	match_value: number;
 }
@@ -114,6 +115,8 @@ export interface AIAnalysisCandidate {
 	strengths: string[];
 	gaps: string[];
 	explanation: string;
+	executive_summary?: string;
+	interview_questions?: string[];
 }
 
 export interface AIAnalysisResponse {

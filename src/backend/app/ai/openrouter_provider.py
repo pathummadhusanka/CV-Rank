@@ -255,18 +255,21 @@ class OpenRouterProvider:
     def extract_requirements(self, job_description: str) -> AIJobAnalysis:
         payload = self._request_json(
             "extract_requirements",
-            "Extract job-relevant required and preferred requirements. "
+            "Extract job-relevant required and preferred requirements into 4 clear categories: 'skill', 'experience', 'domain', or 'education'. "
             "Return JSON with a requirements array. Each item must contain "
-            "description, category, required, and weight. Do not invent requirements.",
+            "description, category, required, and weight (float between 0.1 and 1.0). Do not invent requirements.",
             job_description,
         )
         repaired_weights = 0
         requirements = payload.get("requirements", [])
         if isinstance(requirements, list):
             for requirement in requirements:
-                if isinstance(requirement, dict) and requirement.get("weight") is None:
-                    requirement["weight"] = 0.7 if requirement.get("required", True) else 0.3
-                    repaired_weights += 1
+                if isinstance(requirement, dict):
+                    if requirement.get("weight") is None:
+                        requirement["weight"] = 0.7 if requirement.get("required", True) else 0.3
+                        repaired_weights += 1
+                    if not requirement.get("category"):
+                        requirement["category"] = "skill"
         if repaired_weights:
             logger.warning(
                 "llm requirements contained null weights; applied defaults count=%s",
@@ -292,11 +295,9 @@ class OpenRouterProvider:
         payload = self._request_json(
             "assess_candidate",
             "Return JSON with an assessments array that assesses every supplied requirement against the CV. "
-            "Each array item must contain requirement, classification, and evidence. Use exactly one "
+            "Each array item must contain requirement, classification, evidence, and reasoning. Use exactly one "
             "classification: strong_match, partial_match, no_evidence, or "
-            "contradictory_evidence. Include concise evidence and do not calculate "
-            "an aggregate score. Evidence must always be a JSON array of strings, "
-            "including when there is only one item.",
+            "contradictory_evidence. Evidence must be verbatim text quotes copied directly from the CV text with section context where applicable (e.g. '[Work Experience] 3 years developing Python APIs'). Reasoning must be a concise 1-sentence explanation of why the classification was given. Evidence must always be a JSON array of strings.",
             json.dumps(prompt),
         )
         keyed_assessment = payload.get("assessment")
@@ -311,6 +312,7 @@ class OpenRouterProvider:
                     "requirement": requirement,
                     "classification": value,
                     "evidence": [],
+                    "reasoning": "",
                 }
                 for requirement, value in keyed_assessment.items()
             ]
@@ -320,9 +322,12 @@ class OpenRouterProvider:
         if isinstance(assessments, list):
             repaired_evidence = 0
             for assessment in assessments:
-                if isinstance(assessment, dict) and isinstance(assessment.get("evidence"), str):
-                    assessment["evidence"] = [assessment["evidence"]]
-                    repaired_evidence += 1
+                if isinstance(assessment, dict):
+                    if isinstance(assessment.get("evidence"), str):
+                        assessment["evidence"] = [assessment["evidence"]]
+                        repaired_evidence += 1
+                    if not isinstance(assessment.get("reasoning"), str):
+                        assessment["reasoning"] = ""
             if repaired_evidence:
                 logger.warning(
                     "llm assessment contained string evidence; normalized to lists count=%s",
