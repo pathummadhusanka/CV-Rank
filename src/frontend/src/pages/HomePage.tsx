@@ -120,7 +120,7 @@ export default function HomePage() {
 				const selectedCandidates: UploadedCandidate[] = libraryCVs
 					.filter((cv) => batchCVIds.includes(cv.id))
 					.map((cv) => ({ id: cv.id, filename: cv.filename, size: 0 }));
-				setCandidates([...selectedCandidates, ...uploadedCandidates]);
+				setCandidates(selectedCandidates);
 			}
 		}
 
@@ -150,7 +150,7 @@ export default function HomePage() {
 				setSearchParams({});
 			}
 		}
-	}, [searchParams, storedJobs, activeJob, jobsLoaded, isChoosingJob, libraryCVs, storedBatches, uploadedCandidates]);
+	}, [searchParams, storedJobs, activeJob, jobsLoaded, isChoosingJob, libraryCVs, storedBatches]);
 
 	const handleSelectJob = (job: CreateJobResponse) => {
 		setActiveJob(job);
@@ -183,7 +183,7 @@ export default function HomePage() {
 			.map((cv) => ({ id: cv.id, filename: cv.filename, size: 0 }));
 
 		setSelectedLibraryIds(nextIds);
-		setCandidates([...selectedCandidates, ...uploadedCandidates]);
+		setCandidates(selectedCandidates);
 		setRankedResults([]);
 		setAnalysisError(null);
 		setIsProjectSaved(false);
@@ -201,7 +201,7 @@ export default function HomePage() {
 			.map((cv) => ({ id: cv.id, filename: cv.filename, size: 0 }));
 
 		setSelectedLibraryIds(nextIds);
-		setCandidates([...selectedCandidates, ...uploadedCandidates]);
+		setCandidates(selectedCandidates);
 		setRankedResults([]);
 		setAnalysisError(null);
 		setIsProjectSaved(false);
